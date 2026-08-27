@@ -51,7 +51,7 @@ services:
         sync: false
       - key: CORS_ORIGINS
         value: "https://gramx-frontend.onrender.com,https://gramx.gov.in"
-    healthCheckPath: /api/health/ready
+    healthCheckPath: /health
 
   # -------------------------------------------------------------
   # 2. GRAM-X Frontend Static Site (Vite + React + 3D WebGL)
@@ -59,8 +59,6 @@ services:
   - type: web
     name: gramx-frontend
     env: static
-    region: oregon
-    plan: free
     rootDir: frontend
     buildCommand: "npm install && npm run build"
     staticPublishPath: dist
