@@ -1,0 +1,34 @@
+﻿<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="root-overlay" class="overlay-root">
+        <!-- Top Executive Header -->
+        <ui:VisualElement name="header-bar" class="header-container">
+            <ui:Label text="🏛️ GRAM-X 3D GOVERNMENT DIGITAL TWIN" class="title-label" />
+            <ui:Label text="Piparli Panchayat &bull; Spatial Twin HUD" class="subtitle-label" />
+        </ui:VisualElement>
+
+        <!-- Left KPI Sidepanel -->
+        <ui:VisualElement name="kpi-panel" class="kpi-glass-panel">
+            <ui:Label text="INFRASTRUCTURE HEALTH" class="section-title" />
+            <ui:VisualElement class="kpi-card">
+                <ui:Label text="💧 Water Supply Grid" class="kpi-name" />
+                <ui:Label text="92.4% Optimal" class="kpi-val kpi-val-green" />
+            </ui:VisualElement>
+            <ui:VisualElement class="kpi-card">
+                <ui:Label text="⚡ Power Feeders" class="kpi-name" />
+                <ui:Label text="95.0% Normal" class="kpi-val kpi-val-green" />
+            </ui:VisualElement>
+            <ui:VisualElement class="kpi-card">
+                <ui:Label text="⚠️ Risk Attention Nodes" class="kpi-name" />
+                <ui:Label text="2 Nodes Warning" class="kpi-val kpi-val-amber" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Right What-If Simulation Dock -->
+        <ui:VisualElement name="simulation-dock" class="sim-glass-panel">
+            <ui:Label text="🔮 3D WHAT-IF STRESS SIMULATION" class="section-title" />
+            <ui:Slider name="surge-slider" label="Load Surge %" low-value="0" high-value="100" value="30" class="sim-slider" />
+            <ui:Button name="run-simulation-btn" text="RUN 3D SURGE SIMULATION" class="primary-btn" />
+            <ui:Label name="kpi-status-label" text="Live Telemetry Nominal" class="status-indicator" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,49 @@
+/* GRAM-X Application Styles Override Desk */
+
+.main-content {
+  background-color: var(--bg-primary);
+  flex-grow: 1;
+}
+
+/* Sidebar navigation links */
+.sidebar nav button {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: var(--transition-smooth);
+}
+
+.sidebar nav button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.sidebar nav button.active {
+  background-color: var(--accent-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Scroll indicator animation */
+.scroll-indicator-bar {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── GRAM-X Loading State Animations ─────────────────────────── */
+@keyframes gramx-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes gramx-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(0.9); }
+}

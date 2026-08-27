@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+bcrypt
+pyjwt[crypto]
+pydantic
+python-multipart
+python-dotenv
+websockets
+httpx
+psycopg2-binary; sys_platform != 'win32' or os_name != 'nt'
+boto3
+

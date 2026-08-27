@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRAM-X — District Intelligence Command Centre</title>
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  
+  <style>
+    :root {
+      --bg-primary: #07090e;
+      --bg-secondary: #0f131a;
+      --bg-card: rgba(20, 27, 41, 0.6);
+      --border-color: rgba(255, 255, 255, 0.07);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --accent-primary: #6366f1;
+      --accent-secondary: #38bdf8;
+      --status-low: #10b981;
+      --status-medium: #f59e0b;
+      --status-high: #f97316;
+      --status-critical: #ef4444;
+      --font-body: 'Inter', sans-serif;
+      --font-title: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    select, input, textarea, button {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* Warning Banner */
+    .emergency-banner {
+      background: linear-gradient(90deg, var(--status-critical), var(--status-medium), var(--status-critical));
+      background-size: 200% auto;
+      animation: emergencyPulse 2.5s linear infinite;
+      color: #07090e;
+      font-weight: 800;
+      text-align: center;
+      padding: 8px;
+      font-size: 0.75rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 100;
+      width: 100%;
+    }
+
+    @keyframes emergencyPulse {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* Left Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .logo-box {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      padding: 7px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .logo-title {
+      font-family: var(--font-title);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .role-switcher {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    .role-switcher p {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .role-switcher select {
+      width: 100%;
+      padding: 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .nav-btn {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: #fff;
+    }
+
+    .nav-btn.active {
+      background: var(--accent-primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Main Workspace */
+    .main-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Demo Controller HUD */
+    .demo-hud {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .hud-row-1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hud-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hud-badge {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .hud-playback-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-speed-box {
+      display: flex;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .speed-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .speed-btn.active {
+      background: var(--accent-primary);
+      color: #fff;
+    }
+
+    .steps-nav-grid {
+      display: grid;
+      grid-template-columns: repeat(34, 1fr);
+      gap: 4px;
+    }
+
+    .step-nav-dot {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .step-nav-dot.completed { background: var(--accent-secondary); }
+    .step-nav-dot.active {
+      background: var(--accent-primary);
+      box-shadow: 0 0 6px var(--accent-primary);
+    }
+
+    /* Workspace split pane grid */
+    .workspace-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    /* Center view area */
+    .center-column {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 20px;
+      gap: 20px;
+      height: 100%;
+    }
+
+    /* persistent map card */
+    .persistent-map-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+
+    .persistent-map-box {
+      width: 100%;
+      height: 280px;
+      position: relative;
+    }
+
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      background: #07090e;
+    }
+
+    .map-filters {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .map-filter-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .map-filter-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #fff;
+    }
+
+    .map-telemetry-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.25);
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Switchable tab sections */
+    .tab-sections-area {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .page-section {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .page-section.active {
+      display: flex;
+    }
+
+    /* Right column (active portal + timeline) */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-secondary);
+    }
+
+    .active-role-desk-wrapper {
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .right-timeline-panel {
+      height: 260px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.12);
+    }
+
+    .timeline-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .timeline-log-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 10px;
+      font-size: 0.75rem;
+      border-left: 2px solid var(--border-color);
+      padding-left: 12px;
+      position: relative;
+      padding-bottom: 8px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .timeline-item.active::before {
+      background: var(--accent-primary);
+      box-shadow: 0 0 6px var(--accent-primary);
+    }
+
+    .timeline-time {
+      color: var(--accent-secondary);
+      font-weight: 700;
+    }
+
+    /* Cards styling */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card h3 {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .metric-card.green { border-left: 3px solid var(--status-low); }
+    .metric-card.red { border-left: 3px solid var(--status-critical); }
+    .metric-card.yellow { border-left: 3px solid var(--status-medium); }
+
+    .metric-card p { font-size: 0.65rem; color: var(--text-secondary); }
+    .metric-card h2 { font-size: 1.5rem; font-weight: 800; margin-top: 4px; font-family: var(--font-title); }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    th {
+      padding: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Item rows */
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.78rem;
+    }
+
+    /* Zepto Checklist */
+    .checklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .checklist-step {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.5;
+      transition: all 0.2s;
+    }
+
+    .checklist-step.active {
+      opacity: 1;
+      border-color: var(--accent-primary);
+      background: rgba(99, 102, 241, 0.03);
+    }
+
+    .checklist-step.completed {
+      opacity: 0.9;
+      border-color: var(--status-low);
+      background: rgba(16, 185, 129, 0.02);
+    }
+
+    .step-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .checklist-step.active .step-circle {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .checklist-step.completed .step-circle {
+      border-color: var(--status-low);
+      background: var(--status-low);
+      color: #0b0f19;
+    }
+
+    .step-details { flex: 1; }
+    .step-details strong { font-size: 0.75rem; display: block; }
+    .step-details p { font-size: 0.65rem; color: var(--text-secondary); margin-top: 1px; }
+
+    /* Dialog popups */
+    .ping-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 15, 25, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .ping-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .ping-card {
+      background: #111827;
+      border: 2px solid var(--accent-primary);
+      width: 360px;
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .ping-countdown-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin: 14px 0;
+      overflow: hidden;
+    }
+
+    .ping-countdown-progress {
+      width: 100%;
+      height: 100%;
+      background: var(--status-critical);
+      transition: width 15s linear;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.75);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 460px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .btn-primary { background: var(--accent-primary); color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-success { background: var(--status-low); color: #07090e; }
+    .btn-success:hover { background: #0d9488; }
+
+    /* Toasters */
+    .toaster {
+      position: fixed;
+      bottom: 20px;
+      right: 320px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: #1e293b;
+      border-left: 4px solid var(--accent-primary);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .slider-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+
+    .slider-box input[type="range"] {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      appearance: none;
+      outline: none;
+    }
+
+    .slider-box input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      cursor: pointer;
+    }
+
+    .pulse-ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px auto;
+      position: relative;
+    }
+
+    .pulse-ring::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid var(--accent-primary);
+      animation: ripple 1.2s linear infinite;
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .chart-container {
+      height: 55px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .chart-bar-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .chart-bar {
+      width: 100%;
+      border-radius: 1px;
+      background: var(--status-low);
+      transition: height 0.3s;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-low, .badge-operational { background: rgba(16, 185, 129, 0.12); color: var(--status-low); }
+    .badge-medium, .badge-degraded { background: rgba(234, 179, 8, 0.12); color: var(--status-medium); }
+    .badge-high { background: rgba(249, 115, 22, 0.12); color: var(--status-high); }
+    .badge-critical, .badge-broken { background: rgba(244, 63, 94, 0.12); color: var(--status-critical); }
+
+    .battle-col {
+      flex: 1;
+      background: rgba(0,0,0,0.25);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.65rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .battle-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .battle-fill {
+      height: 100%;
+      background: var(--accent-primary);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      outline: none;
+    }
+
+    .voice-simulate-panel {
+      padding: 12px;
+      background: rgba(20, 184, 166, 0.03);
+      border: 1px dashed rgba(20, 184, 166, 0.2);
+      border-radius: 6px;
+    }
+
+    .panels-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
+
+    .action-plan-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-plan-item:hover {
+      background: rgba(99, 102, 241, 0.04);
+      border-color: var(--accent-primary);
+    }
+
+    .intelligence-node {
+      border-left: 3px solid var(--accent-primary);
+      padding-left: 14px;
+      margin-left: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .node-header {
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .star-bar {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      font-size: 1.4rem;
+      color: var(--status-medium);
+      margin: 8px 0;
+    }
+
+    /* Category grids for citizen portal simple UX */
+    .citizen-categories-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .citizen-category-btn {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.72rem;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .citizen-category-btn:hover, .citizen-category-btn.active {
+      background: rgba(99, 102, 241, 0.05);
+      border-color: var(--accent-primary);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EMERGENCY BEATING WARNING BANNER -->
+  <div class="emergency-banner" id="demo-emergency-banner">
+    <span>⚠️ EMERGENCY DISTRICT ALERT — CRITICAL SUPPLY STALL DETECTED AT PUMP #17</span>
+  </div>
+
+  <div class="app-container">
+
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </div>
+        <h2 class="logo-title">GRAM-X</h2>
+      </div>
+
+      <div class="role-switcher">
+        <p>Current Workspace Role</p>
+        <select id="role-select" onchange="switchRole(this.value)">
+          <option value="admin">Collector / Admin Portal</option>
+          <option value="worker">Field Worker Desk</option>
+          <option value="citizen">Citizen Reporting Portal</option>
+        </select>
+      </div>
+
+      <nav style="display:flex; flex-direction:column; gap:4px; flex:1;" id="sidebar-nav-container">
+        <!-- filled dynamically dependent on role -->
+      </nav>
+    </div>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="main-workspace">
+      
+      <!-- TIMELINE HUD CONTROLLER -->
+      <div class="demo-hud">
+        <div class="hud-row-1">
+          <div class="hud-title-box">
+            <span class="hud-badge">DEMO CONTROL HUD</span>
+            <h3 id="hud-step-title" style="font-size:0.8rem; font-family:var(--font-title);">Step 1: Normal operations</h3>
+          </div>
+          <div class="hud-playback-controls">
+            <button class="btn btn-primary" id="btn-start" onclick="togglePlayback()">START DEMO</button>
+            <button class="btn btn-secondary" onclick="restartDemo()">RESTART</button>
+            <button class="btn btn-secondary" onclick="resetDemo()">RESET</button>
+            
+            <div class="hud-speed-box">
+              <button class="speed-btn" id="speed-0.5" onclick="setDemoSpeed(0.5)">0.5x</button>
+              <button class="speed-btn active" id="speed-1" onclick="setDemoSpeed(1)">1x</button>
+              <button class="speed-btn" id="speed-2" onclick="setDemoSpeed(2)">2x</button>
+              <button class="speed-btn" id="speed-4" onclick="setDemoSpeed(4)">4x</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="steps-nav-grid" id="steps-progress-nav"></div>
+        <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:var(--text-secondary); margin-top:2px;">
+          <span id="hud-step-desc">Loading state...</span>
+          <span id="hud-step-num" style="color:var(--accent-secondary); font-weight:700;">Step 1/34</span>
+        </div>
+      </div>
+
+      <!-- WORKSPACE VIEWPORT GRID -->
+      <div class="workspace-layout">
+
+        <!-- Center Viewport (GIS map + dynamic intelligence workspace panels) -->
+        <div class="center-column">
+          
+          <!-- Persistent Map Card -->
+          <div class="persistent-map-card">
+            <!-- Map Layers Filter Bar -->
+            <div class="map-filters">
+              <button class="map-filter-btn active" onclick="filterMapLayer('all')">All</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('critical')">Critical</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('water')">Water</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('roads')">Roads</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('health')">Health</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('infrastructure')">Infrastructure</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('risk')">Risk Zones</button>
+              <button class="map-filter-btn" onclick="filterMapLayer('equity')">Equity Gaps</button>
+            </div>
+
+            <div class="persistent-map-box">
+              <div id="map-canvas"></div>
+            </div>
+            
+            <div class="map-telemetry-strip">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.62rem; margin-bottom:2px;">
+                  <span>Pump #17 Flow Rate</span>
+                  <strong id="live-flow-val">92%</strong>
+                </div>
+                <div class="chart-container" id="flow-sparkline"></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.62rem; margin-bottom:2px;">
+                  <span>Storage Reservoir Level</span>
+                  <strong id="live-tank-val">81%</strong>
+                </div>
+                <div class="chart-container" id="tank-sparkline"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Switchable Tab Area -->
+          <div class="tab-sections-area">
+            
+            <!-- 1. District Command Dashboard -->
+            <div class="page-section active" id="sec-village_dashboard">
+              
+              <!-- TODAY'S BRIEFING Panel -->
+              <div class="card" style="border-left: 4px solid var(--accent-primary);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <h3 style="font-family:var(--font-title); font-size:0.85rem; color:var(--accent-secondary);">💡 TODAY'S BRIEFING</h3>
+                  <button class="btn btn-secondary" style="padding:2px 8px; font-size:0.6rem;" onclick="generateDailyBriefing()">Generate Briefing</button>
+                </div>
+                <div id="ai-briefing-text" style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
+                  All district metrics operating within nominal boundaries. 0 active alerts.
+                </div>
+              </div>
+
+              <!-- "WHAT NEEDS MY ATTENTION?" Section -->
+              <div class="card" style="border-left:4px solid var(--accent-secondary);">
+                <h3 style="color:var(--accent-secondary); font-family:var(--font-title); display:flex; align-items:center; gap:8px;">
+                  ⚡ WHAT SHOULD I DO TODAY?
+                </h3>
+                <p style="font-size:0.75rem; color:var(--text-secondary);">Prioritized administrative actions computed automatically by GRAM-X:</p>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px;" id="action-plan-list">
+                  <div class="action-plan-item" onclick="switchTab('incidents')">
+                    <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:2px;">
+                      <span style="color:var(--status-critical);">01 🔴 WATER SERVICE FAILURE (Pump #17)</span>
+                      <span style="color:var(--status-critical);">Critical • Action within 6h</span>
+                    </div>
+                    <p style="color:var(--text-secondary); font-size:0.7rem;">740 residents affected at Piparli. Remote Hamlet equity levels down to 47%. Est cost: ₹18,000.</p>
+                  </div>
+                  <div class="action-plan-item" onclick="switchTab('incidents')">
+                    <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:2px;">
+                      <span>02 🔴 FLOOD RISK (Zone C)</span>
+                      <span style="color:var(--status-critical);">High Risk</span>
+                    </div>
+                    <p style="color:var(--text-secondary); font-size:0.7rem;">Deferred maintenance simulation flags 420 households at risk. Est repair: ₹42k.</p>
+                  </div>
+                  <div class="action-plan-item" onclick="switchTab('asset_intel')">
+                    <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:2px;">
+                      <span>03 🟠 HEALTH FACILITY (PHC utilization)</span>
+                      <span>Monitor gap</span>
+                    </div>
+                    <p style="color:var(--text-secondary); font-size:0.7rem;">Outcomes tracking flags a 43% utilization index variance at Block A PHC.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Metrics -->
+              <div class="metrics-grid">
+                <div class="metric-card green" id="card-health">
+                  <p>Overall District Index</p>
+                  <h2 id="metric-health">92.5%</h2>
+                </div>
+                <div class="metric-card red" id="card-incidents">
+                  <p>Open High-Priority Alerts</p>
+                  <h2 id="metric-incidents">0</h2>
+                </div>
+                <div class="metric-card" style="border-left:3px solid var(--accent-primary);">
+                  <p>Total District Budget</p>
+                  <h2>₹13.5 Lakh</h2>
+                </div>
+                <div class="metric-card yellow" id="card-budget">
+                  <p>Available Panchayat Budget</p>
+                  <h2 id="metric-budget">₹1,00,000</h2>
+                </div>
+              </div>
+
+              <!-- What Changed Today? (EOD review) -->
+              <div class="card" id="exec-impact-summary" style="display: none; border-top: 3px solid var(--status-low); padding:14px;">
+                <h4 style="font-size:0.8rem; color:var(--status-low); margin-bottom:6px;">✓ What Changed Today? (District Daily Review)</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.72rem;">
+                  <div style="background:rgba(255,255,255,0.02); padding:8px; border-radius:6px;">
+                    <span style="color:var(--status-critical); font-weight:700;">PRE-INTERVENTION STATE:</span>
+                    <div>• 0% Water access at Piparli Zone B.</div>
+                    <div>• Compounding cholera health warnings.</div>
+                  </div>
+                  <div style="background:rgba(16,185,129,0.05); padding:8px; border-radius:6px;">
+                    <span style="color:var(--status-low); font-weight:700;">POST-INTERVENTION OUTCOME:</span>
+                    <div>• 98.5% Water access Restored.</div>
+                    <div>• Saved ₹1.32 Lakh via rainwater cistern bypass reuse.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panchayat Comparison Table -->
+              <div class="card">
+                <h3>District Panchayat Performance Registry</h3>
+                <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Cross-village benchmark tracking matrix:</p>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Panchayat</th>
+                      <th>Population</th>
+                      <th>Alerts State</th>
+                      <th>Health Index</th>
+                    </tr>
+                  </thead>
+                  <tbody id="collector-table-body">
+                    <!-- filled dynamically -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Budget Allocator Card -->
+              <div class="card">
+                <h3>Panchayat Budget Allocation Simulator</h3>
+                <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Rank and prioritize interventions within available constraints:</p>
+                <div class="slider-box" style="margin-bottom:8px;">
+                  <span>Panchayat Available Budget:</span>
+                  <input type="range" id="main-budget-slider" min="10000" max="100000" value="100000" oninput="widgetAdjustBudget(this.value)">
+                  <strong id="budget-slider-val">₹1,00,000</strong>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;" id="budget-prioritized-projects">
+                  <!-- filled dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Incident Intelligence Workspace -->
+            <div class="page-section" id="sec-incidents">
+              <div class="card">
+                <h3>Incident Intelligence Workspace</h3>
+                <p style="font-size:0.72rem; color:var(--text-secondary); margin-bottom:6px;">Unified decision room to review, optimize, and approve repair works:</p>
+                
+                <div style="display:flex; flex-direction:column; gap:14px;" id="intelligence-flow-cards">
+                  <!-- Flow Card 1: Problem & Evidence -->
+                  <div class="intelligence-node">
+                    <span class="node-header">1. Problem & Evidence (Duplicate Intelligence)</span>
+                    <div style="font-size:0.75rem; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:4px;">
+                      <div>• Incident: <strong>Borewell Pump #17 Flow Decay</strong></div>
+                      <div>• Duplicate reports: <strong style="color:var(--status-medium);">20 duplicate complaints clustered into 1 case</strong></div>
+                      <div>• Confidence: <strong style="color:var(--status-low);">91% (Telemetry anomaly + Citizen voice logs)</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Flow Card 2: Affected Population & Gaps -->
+                  <div class="intelligence-node">
+                    <span class="node-header">2. Affected Population & Gaps</span>
+                    <div style="font-size:0.75rem; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:4px;">
+                      <div>• Total Affected: <strong>740 residents</strong></div>
+                      <div>• Equity gap flag: <strong style="color:var(--status-high);">Remote Hamlet water levels down to 47%</strong></div>
+                      <div>• Escalation Trigger: <strong>Escalated to Collector (Aff. Pop > 500, critical water Main stall)</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Flow Card 3: Diagnostics & Predicted Risks -->
+                  <div class="intelligence-node">
+                    <span class="node-header">3. Root Cause & Predicted Risks</span>
+                    <div style="font-size:0.75rem; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:4px;">
+                      <div>• Diagnostics: <strong>Armature windings stator motor failure</strong></div>
+                      <div>• What happens if we wait (Do Nothing): <strong style="color:var(--status-critical);">₹42,000 delay damage vs ₹18,000 repair today</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Flow Card 4: Options comparison -->
+                  <div class="intelligence-node">
+                    <span class="node-header">4. Options Battle & Available Resources</span>
+                    <div style="font-size:0.75rem; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:6px;">
+                      <div style="display:flex; gap:6px;">
+                        <div class="battle-col">
+                          <strong>Repair (AI Recommended)</strong>
+                          <span>₹18,000</span>
+                          <span style="color:var(--status-low);">High immediate impact</span>
+                        </div>
+                        <div class="battle-col">
+                          <strong>Replace</strong>
+                          <span>₹48,000</span>
+                          <span>Lower long-term risk</span>
+                        </div>
+                        <div class="battle-col">
+                          <strong>Wait</strong>
+                          <span>₹0 today</span>
+                          <span style="color:var(--status-critical);">High future risk</span>
+                        </div>
+                      </div>
+                      <div>• Available Panchayat Budget: <strong>₹1,00,000</strong></div>
+                      <div>• Rainwater cistern bypass renovated: <strong style="color:var(--status-low);">Saved ₹1.32 Lakh</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Flow Card 5: Decision Actions -->
+                  <div class="intelligence-node">
+                    <span class="node-header">5. Recommendation & Decision action</span>
+                    <div style="display:flex; gap:10px; align-items:center;" id="collector-decision-actions-slot">
+                      <button class="btn btn-secondary" onclick="openExplainModal()">Why this recommendation?</button>
+                      <button class="btn btn-primary" style="background:var(--status-low); color:#07090e;" onclick="approveCollectorRepair()">Approve Recommendation</button>
+                      <button class="btn btn-secondary" onclick="openOverrideDialog()">Override</button>
+                    </div>
+                    <div id="collector-override-input" style="display:none; flex-direction:column; gap:6px; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px;">
+                      <label style="font-size:0.65rem;">Override action choice:</label>
+                      <input type="text" id="override-action-value" style="background:var(--bg-primary); padding:6px; font-size:0.75rem;" placeholder="e.g. Replace instead of repair">
+                      <label style="font-size:0.65rem;">Reason for override:</label>
+                      <textarea id="override-reason-value" rows="2" style="background:var(--bg-primary); padding:6px; font-size:0.75rem;" placeholder="e.g. Repeated stator failures..."></textarea>
+                      <button class="btn btn-success" style="padding:4px 8px; font-size:0.7rem; justify-content:center;" onclick="submitCollectorOverride()">Submit Override to Memory</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 3. Asset Registry -->
+            <div class="page-section" id="sec-asset_intel">
+              <div class="card">
+                <h3>Asset Reliability & Work Logs</h3>
+                <div class="item-list">
+                  <div class="item-row"><span>Borewell Pump #17:</span> <strong>MTBF 19 days</strong></div>
+                  <div class="item-row"><span>Cistern Bypass storage:</span> <strong>12,500 Liters autonomy</strong></div>
+                  <div class="item-row"><span>Silent current leakage:</span> <strong>Streetlight Cluster C</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Outcome Verification -->
+            <div class="page-section" id="sec-project_intel">
+              <div class="card" id="outcome-panel-slot">
+                <h3>Outcome Verification Checklists</h3>
+                <p style="font-size:0.75rem; color:var(--text-secondary);">Resolution proof logs will appear here during task completion.</p>
+              </div>
+
+              <!-- Project Outcome Monitor (Outcome Gaps) -->
+              <div class="card">
+                <h3>Project Outcome Monitor</h3>
+                <p style="font-size:0.72rem; color:var(--text-secondary);">Monitoring outcomes variance vs completions:</p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px;">
+                  <div style="background:rgba(0,0,0,0.15); padding:10px; border-radius:8px; font-size:0.72rem;">
+                    <strong>Pump #17 Installation</strong>
+                    <div>Physical completion: <strong>100%</strong></div>
+                    <div>Actual usage index: <strong>51%</strong></div>
+                    <div>Outcome achievement: <strong style="color:var(--status-high);">43% (Outcome Gap)</strong></div>
+                  </div>
+                  <div style="background:rgba(0,0,0,0.15); padding:10px; border-radius:8px; font-size:0.72rem;">
+                    <strong>PHC Electrification</strong>
+                    <div>Physical completion: <strong>100%</strong></div>
+                    <div>Functional score: <strong>68%</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Cross-Village indices -->
+            <div class="page-section" id="sec-cross_analytics">
+              <div class="card">
+                <h3>Cross-Village Audit Logs</h3>
+                <div class="item-list" style="margin-bottom:12px;">
+                  <div class="item-row"><span>Piparli Panchayat:</span> <strong>92.5% reliability</strong></div>
+                  <div class="item-row"><span>Ramnagar Panchayat:</span> <strong>94.0% reliability</strong></div>
+                </div>
+                <button class="btn btn-secondary" onclick="runCrossVillageAI()">Why is Village A performing better than Village B?</button>
+                <p id="cross-village-explain" style="font-size:0.72rem; color:var(--status-low); margin-top:8px; display:none;">
+                  ✓ Piparli Panchayat deployed automated rainwater silt traps audits and active preventative maintenance lists, reducing repair turnaround times by 68%.
+                </p>
+              </div>
+            </div>
+
+            <!-- 6. Citizen Portal Page Tab -->
+            <div class="page-section" id="sec-citizen_portal">
+              <div class="card">
+                <h3>Submit Infrastructure Complaint</h3>
+                <div style="display:none; padding:10px; background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.3); border-radius:6px; font-size:0.7rem; color:var(--status-medium); margin-bottom: 12px;" id="duplicate-warning">
+                  <strong>AI duplicate interceptor:</strong> Complaint matches active Case #202. Clustered to prevent duplicates.
+                </div>
+                
+                <!-- Category buttons simple UX -->
+                <div class="citizen-categories-grid">
+                  <div class="citizen-category-btn active">💧 Water</div>
+                  <div class="citizen-category-btn">🛣️ Road</div>
+                  <div class="citizen-category-btn">💡 Streetlight</div>
+                  <div class="citizen-category-btn">🗑️ Waste</div>
+                  <div class="citizen-category-btn">🏥 Health</div>
+                  <div class="citizen-category-btn">🏫 Education</div>
+                  <div class="citizen-category-btn">🚰 Drainage</div>
+                  <div class="citizen-category-btn">📍 Other</div>
+                </div>
+
+                <form onsubmit="e => e.preventDefault()">
+                  <!-- Hindi voice recorder -->
+                  <div class="voice-simulate-panel" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                      <strong style="font-size:0.75rem; color:#14b8a6;">🎙️ RECORD VOICE (आवाज रिकॉर्ड करें)</strong>
+                      <span class="badge badge-low" id="voice-rec-badge">READY</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary" style="width: 100%; border-color: #14b8a6; color: #14b8a6;" onclick="startVoiceRecord()">Click to Speak (बोलने के लिए दबाएं)</button>
+                    <textarea id="voice-rec-text" rows="2" style="display:none; font-size: 0.75rem; width:100%; background: var(--bg-primary); margin-top:8px; padding:6px;">हमारे गांव में पिछले तीन दिन से पानी नहीं आ रहा है।</textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Describe the problem (क्या समस्या है?):</label>
+                    <input type="text" id="citizen-complain-title" placeholder="e.g. Borewell water pump stalling / broken" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Description / Location Details:</label>
+                    <textarea id="citizen-complain-desc" rows="3" placeholder="Provide extra details..."></textarea>
+                  </div>
+
+                  <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="simulatePhotoAttached()">[ TAKE PHOTO ]</button>
+                    <p id="photo-indicator" style="font-size: 0.7rem; color: var(--status-low); display: none; align-self:center;">✓ Camera image attached</p>
+                  </div>
+
+                  <button type="button" class="btn btn-primary" onclick="triggerDuplicateIntercept()" style="width:100%; justify-content:center;">Submit Report</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- 7. Field Worker Portal Page Tab -->
+            <div class="page-section" id="sec-worker_portal">
+              <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <h3 style="color:var(--accent-secondary);">Today's Assigned Tasks</h3>
+                  <span class="badge badge-operational">Online</span>
+                </div>
+                
+                <div class="checklist-container">
+                  <!-- Suresh's active task card -->
+                  <div class="card" style="border-left:4px solid var(--status-critical); padding:14px; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <strong style="font-size:0.85rem;">Borewell Pump #17 winding</strong>
+                      <span class="badge badge-critical">CRITICAL</span>
+                    </div>
+                    <div style="font-size:0.72rem; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary);">
+                      <div>Distance: <strong>1.2 km away</strong></div>
+                      <div>ETA: <strong>6 minutes</strong></div>
+                      <div>Skill Required: <strong>Hydraulics / Winding repair</strong></div>
+                      <div>Tools/Materials: <strong>Copper armature coil, Hydraulic puller</strong></div>
+                      <div>Safety Instructions: <strong>Lockout water reservoir mains before start.</strong></div>
+                    </div>
+                    
+                    <div style="display:flex; gap:8px; margin-top:6px;" id="worker-actions-slot">
+                      <button class="btn btn-secondary" onclick="completeChecklistStep(1)">1. Navigate</button>
+                      <button class="btn btn-secondary" onclick="completeChecklistStep(2)">2. Arrived</button>
+                      <button class="btn btn-secondary" onclick="completeChecklistStep(3)">3. Repair</button>
+                      <button class="btn btn-secondary" onclick="completeChecklistStep(4)">4. Photo</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Column (Active Role Desk + Event Logs) -->
+        <div class="right-column">
+          
+          <!-- Top: Active Role Portal Desk -->
+          <div class="active-role-desk-wrapper" id="active-role-desk-pane">
+            <!-- Dynamically rendered -->
+          </div>
+
+          <!-- Bottom: Persistent timeline -->
+          <div class="right-timeline-panel">
+            <div class="timeline-header">District Action Timeline</div>
+            <div class="timeline-log-body" id="timeline-log-list"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leaflet GIS Map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- 34-Step JS engine script -->
+  <script>
+    // ----------------- AUTOMATED STEPS DEFINITION -----------------
+    const SCENARIO_STEPS = [
+      {
+        step: 1,
+        title: "Healthy State",
+        desc: "Pump #17 normal operations. Flow output 92%, tank level 81%.",
+        run: () => {
+          setMockTelemetry(92, 81);
+          clearTimeline();
+          logTimeline("18:00", "Pump #17 running healthy.");
+          updateGISMap(1);
+          switchTab("village_dashboard");
+          document.getElementById("ai-briefing-text").innerHTML = "All district metrics operating within nominal boundaries. 0 active alerts.";
+          document.getElementById("exec-impact-summary").style.display = "none";
+          toggleEmergency(false);
+          resetWorkerChecklist();
+        }
+      },
+      {
+        step: 2,
+        title: "Simulate Degradation",
+        desc: "IoT sensors detect output flow decays: 92% ➔ 43%.",
+        run: () => {
+          setMockTelemetry(43, 38);
+          logTimeline("18:02", "⚠️ Emerging Water-Service Risk. Pump flow dropping.");
+          showToast("⚠️ Telemetry alert: Pump #17 output degradation");
+          updateGISMap(2);
+          switchTab("village_dashboard");
+          document.getElementById("ai-briefing-text").innerHTML = "⚠️ Sensor alert: flow pressure dropping on Pump #17. Autonomy buffer active.";
+        }
+      },
+      {
+        step: 3,
+        title: "Citizen Voice Report",
+        desc: "Sunita Devi submits voice report. AI transcribes and structure-codes.",
+        run: () => {
+          logTimeline("18:03", "🎙️ Citizen voice complaint uploaded.");
+          switchRole("citizen");
+          updateGISMap(3);
+          setTimeout(() => {
+            const title = document.getElementById("citizen-complain-title");
+            const desc = document.getElementById("citizen-complain-desc");
+            if (title) title.value = "पानी का पंप खराब हो गया है";
+            if (desc) desc.value = "Hindi Audio transcription: Ward B handpump stalled for 5 days. Water is muddy.";
+            const phot = document.getElementById("photo-indicator");
+            if (phot) phot.style.display = "block";
+          }, 100);
+        }
+      },
+      {
+        step: 4,
+        title: "Duplicate Detection",
+        desc: "Aggregating 4 reports into 1 incident using spatial proximity index.",
+        run: () => {
+          logTimeline("18:03", "🔗 4 reports clustered into 1 case.");
+          showToast("🔗 Aggregating duplicate reports near Zone B");
+          switchRole("admin");
+          switchTab("incidents");
+        }
+      },
+      {
+        step: 5,
+        title: "Evidence Fusion",
+        desc: "Evidence confidence scaled to 91% (High Confidence).",
+        run: () => {
+          logTimeline("18:04", "🧠 Fusing data streams. Confidence at 91%.");
+          switchRole("admin");
+          switchTab("incidents");
+        }
+      },
+      {
+        step: 6,
+        title: "Evidence Conflict Demo",
+        desc: "Conflict alert: Citizen says broken vs. Sensor logs partial output.",
+        run: () => {
+          logTimeline("18:04", "⚖️ Conflicting evidence warning: field verify recommended.");
+          switchRole("admin");
+          switchTab("incidents");
+        }
+      },
+      {
+        step: 7,
+        title: "GIS / Digital Twin",
+        desc: "Digital twin map highlights bypass pipelines and risk buffer zones.",
+        run: () => {
+          logTimeline("18:04", "🗺️ Rendering bypass route coordinates.");
+          updateGISMap(7);
+        }
+      },
+      {
+        step: 8,
+        title: "Affected Population",
+        desc: "Estimated impacted population matching census details: 740 people.",
+        run: () => {
+          logTimeline("18:05", "👥 Population impact estimate: 740 residents.");
+          document.getElementById("ai-briefing-text").innerHTML = "👥 Emergency Warning: 740 residents affected by Pump #17 stall.";
+        }
+      },
+      {
+        step: 9,
+        title: "Equity Detection",
+        desc: "AI flags service access gap: Remote Hamlet water levels at 47%.",
+        run: () => {
+          logTimeline("18:05", "⚖ Last-mile service gap detected in Remote Hamlet.");
+          showToast("⚖️ Equity Gap Detected in Remote Hamlet");
+        }
+      },
+      {
+        step: 10,
+        title: "Root Cause",
+        desc: "AI causal diagnostics tree points to stator winding breakdown.",
+        run: () => {
+          logTimeline("18:05", "🩺 Root cause diagnostics mapped.");
+          switchTab("incidents");
+        }
+      },
+      {
+        step: 11,
+        title: "Dynamic Priority",
+        desc: "Priority escalates from HIGH to CRITICAL. Emergency modes active.",
+        run: () => {
+          logTimeline("18:05", "🔴 Priority escalated to CRITICAL.");
+          showToast("🔴 Priority escalated to CRITICAL");
+          toggleEmergency(true);
+        }
+      },
+      {
+        step: 12,
+        title: "Invisible Problem Detection",
+        desc: "AI identifies streetlight anomaly without active citizen complaints.",
+        run: () => {
+          logTimeline("18:05", "🔍 Anomaly detected on Streetlight Cluster C (No citizen reports).");
+        }
+      },
+      {
+        step: 13,
+        title: "Search Digital Memory",
+        desc: "Retrieves 18 matched incidents to calculate resolution path success.",
+        run: () => {
+          logTimeline("18:05", "🧠 Digital memory search complete.");
+        }
+      },
+      {
+        step: 14,
+        title: "AI Red Team Challenge",
+        desc: "AI Red Team challenges cost parameters based on lifecycle curves.",
+        run: () => {
+          logTimeline("18:06", "🛡️ AI Red Team challenge: replacement longevity evaluated.");
+        }
+      },
+      {
+        step: 15,
+        title: "Intervention Battle",
+        desc: "Side-by-side matrices comparing repair, replace, and preventive work.",
+        run: () => {
+          logTimeline("18:06", "⚔️ Options battle compared.");
+        }
+      },
+      {
+        step: 16,
+        title: "Impact per Rupee",
+        desc: "Dynamic prioritizer ranks solutions per rupee of investment.",
+        run: () => {
+          logTimeline("18:06", "📈 Impact/₹ ratios computed.");
+        }
+      },
+      {
+        step: 17,
+        title: "Live Budget Slider",
+        desc: "Adjust available budget dynamically to see prioritizations shift.",
+        run: () => {
+          logTimeline("18:06", "🎛️ Live budget optimizer slider active.");
+          switchTab("village_dashboard");
+        }
+      },
+      {
+        step: 18,
+        title: "What If We Do Nothing?",
+        desc: "Deferred maintenance modeling shows compounding future costs.",
+        run: () => {
+          logTimeline("18:06", "⏳ Deferred maintenance simulator evaluated.");
+        }
+      },
+      {
+        step: 19,
+        title: "Future Village Map",
+        desc: "Expanding risk zones appear on the spatial twin simulation.",
+        run: () => {
+          logTimeline("18:06", "🗺️ Future risk map expansion rendered.");
+          updateGISMap(19);
+        }
+      },
+      {
+        step: 20,
+        title: "Explain Decision",
+        desc: "Displaying AI confidence and multi-factor weight metrics.",
+        run: () => {
+          logTimeline("18:07", "📑 Explaining decision weights.");
+          openExplainModal();
+        }
+      },
+      {
+        step: 21,
+        title: "Human vs AI Override",
+        desc: "Allowing manual overrides with calculated cost variations.",
+        run: () => {
+          logTimeline("18:07", "🙋 Override panels loaded.");
+          closeExplainModal();
+        }
+      },
+      {
+        step: 22,
+        title: "Technician Matching",
+        desc: "Selecting plumber Suresh Kumar based on skill, location, and speed.",
+        run: () => {
+          logTimeline("18:07", "👨‍🔧 Technician Suresh matched.");
+          switchRole("worker");
+        }
+      },
+      {
+        step: 23,
+        title: "Live Technician Route",
+        desc: "Suresh's dispatcher ping rings, map coordinates animate route.",
+        run: () => {
+          logTimeline("18:07", "🚚 Dispatcher approved. Technician Suresh travelling.");
+          triggerIncomingPing();
+        }
+      },
+      {
+        step: 24,
+        title: "Field Work Package",
+        desc: "AI compiles checklist: motor tools, armature replacement coil, maps.",
+        run: () => {
+          logTimeline("18:08", "📦 Field work package generated.");
+          switchRole("worker");
+        }
+      },
+      {
+        step: 25,
+        title: "Repair Simulation",
+        desc: "Suresh performs coil windings. Dynamic progress bar ticks up.",
+        run: () => {
+          logTimeline("18:08", "🔧 Winding armature coil... Repair in progress.");
+          setTimeout(() => {
+            completeChecklistStep(1);
+            completeChecklistStep(2);
+            completeChecklistStep(3);
+            completeChecklistStep(4);
+          }, 300);
+        }
+      },
+      {
+        step: 26,
+        title: "Sensor Recovery",
+        desc: "Flow sensors log flow recovery back to 89 L/min.",
+        run: () => {
+          logTimeline("18:08", "🟢 Sensor recovery: flow pressure rising to 89 L/m.");
+          showToast("🟢 Pump output normal pressure detected");
+          setMockTelemetry(89, 78);
+          updateGISMap(26);
+        }
+      },
+      {
+        step: 27,
+        title: "Before / After Proof",
+        desc: "Displaying side-by-side sensor value comparison.",
+        run: () => {
+          logTimeline("18:09", "📷 Photo evidence and before/after verification logged.");
+          switchTab("project_intel");
+          setOutcomeSlot(`
+            <div class="card">
+              <h4>Before vs After Verification</h4>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.75rem; text-align:center;">
+                <div style="background:rgba(244,63,94,0.1); padding:8px; border-radius:6px;">BEFORE: 43%</div>
+                <div style="background:rgba(16,185,129,0.1); padding:8px; border-radius:4px;">AFTER: 89%</div>
+              </div>
+            </div>
+          `);
+        }
+      },
+      {
+        step: 28,
+        title: "Citizen Confirmation",
+        desc: "Interactive SMS feedback sent. Sunita Devi submits 5-star rating.",
+        run: () => {
+          logTimeline("18:09", "✉️ Citizen confirmation received.");
+          switchRole("citizen");
+          const rateCard = document.getElementById("citizen-rating-card");
+          if (rateCard) rateCard.style.display = "block";
+        }
+      },
+      {
+        step: 29,
+        title: "Outcome Verification",
+        desc: "Aggregating telemetry, photo validation, and survey records.",
+        run: () => {
+          logTimeline("18:09", "✓ Outcome verified. Water access restored.");
+          switchRole("admin");
+          switchTab("project_intel");
+          setOutcomeSlot(`
+            <div class="card" style="border-left:4px solid var(--status-low);">
+              <h4>Outcome: VERIFIED</h4>
+              <p style="font-size:0.75rem;">Telemetry check: PASS. Citizen confirmation: PASS.</p>
+            </div>
+          `);
+        }
+      },
+      {
+        step: 30,
+        title: "What Changed?",
+        desc: "Comparative metrics showing village reliability score improvement.",
+        run: () => {
+          logTimeline("18:09", "📊 Mapped reliability changes.");
+          switchTab("village_dashboard");
+        }
+      },
+      {
+        step: 31,
+        title: "Intervention Score",
+        desc: "Dynamic scorecard measuring cost, speed, and benefits.",
+        run: () => {
+          logTimeline("18:09", "🎯 Intervention Efficiency Scorecard computed.");
+          switchTab("village_dashboard");
+        }
+      },
+      {
+        step: 32,
+        title: "Executive Impact Summary",
+        desc: "Financial dashboard summarizing capital allocations and avoided costs.",
+        run: () => {
+          logTimeline("18:10", "📑 Executive impact summary published.");
+          switchTab("village_dashboard");
+          document.getElementById("exec-impact-summary").style.display = "block";
+        }
+      },
+      {
+        step: 33,
+        title: "Cross-Village Learning",
+        desc: "Logging success parameters into local networks for reuse guidelines.",
+        run: () => {
+          logTimeline("18:10", "🧠 Digital memory index completed. Shared models mapped.");
+          switchTab("cross_analytics");
+        }
+      },
+      {
+        step: 34,
+        title: "Final Demo Message",
+        desc: "Water Crisis Demo Sequence closed successfully. From Report to Outcome.",
+        run: () => {
+          logTimeline("18:10", "🏁 Demo loop completed. From Report to Outcome.");
+          switchTab("village_dashboard");
+        }
+      }
+    ];
+
+    // ----------------- TELEMETRY SPARKLINE BUILDER -----------------
+    const sparklines = {
+      flow: Array(20).fill(92),
+      tank: Array(20).fill(81)
+    };
+
+    function setMockTelemetry(flowVal, tankVal) {
+      document.getElementById("live-flow-val").innerText = `${flowVal}%`;
+      document.getElementById("live-tank-val").innerText = `${tankVal}%`;
+      
+      sparklines.flow.shift();
+      sparklines.flow.push(flowVal);
+      sparklines.tank.shift();
+      sparklines.tank.push(tankVal);
+      
+      renderSparkline("flow-sparkline", sparklines.flow);
+      renderSparkline("tank-sparkline", sparklines.tank);
+    }
+
+    function renderSparkline(elementId, values) {
+      const container = document.getElementById(elementId);
+      if (!container) return;
+      container.innerHTML = values.map(val => {
+        const heightPct = Math.max(5, val);
+        const color = val > 50 ? "var(--status-low)" : (val > 25 ? "var(--status-medium)" : "var(--status-critical)");
+        return `<div class="chart-bar-col"><div class="chart-bar" style="height: ${heightPct}%; background: ${color};"></div></div>`;
+      }).join("");
+    }
+
+    // ----------------- ROLE PORTALS NAVIGATION MANAGEMENT -----------------
+    function switchRole(role) {
+      selectedRole = role;
+      document.getElementById("role-select").value = role;
+
+      const navContainer = document.getElementById("sidebar-nav-container");
+
+      if (role === "admin") {
+        navContainer.innerHTML = `
+          <button class="nav-btn active" id="btn-village_dashboard" onclick="switchTab('village_dashboard')">
+            <span>District Dashboard</span>
+          </button>
+          <button class="nav-btn" id="btn-incidents" onclick="switchTab('incidents')">
+            <span>Incident Intelligence</span>
+          </button>
+          <button class="nav-btn" id="btn-asset_intel" onclick="switchTab('asset_intel')">
+            <span>Asset Registry</span>
+          </button>
+          <button class="nav-btn" id="btn-project_intel" onclick="switchTab('project_intel')">
+            <span>Outcome Verification</span>
+          </button>
+          <button class="nav-btn" id="btn-cross_analytics" onclick="switchTab('cross_analytics')">
+            <span>Cross-Village Indices</span>
+          </button>
+        `;
+        switchTab("village_dashboard");
+      } else if (role === "worker") {
+        navContainer.innerHTML = `
+          <button class="nav-btn active" id="btn-worker_portal" onclick="switchTab('worker_portal')">
+            <span>Today's Tasks</span>
+          </button>
+        `;
+        switchTab("worker_portal");
+      } else if (role === "citizen") {
+        navContainer.innerHTML = `
+          <button class="nav-btn active" id="btn-citizen_portal" onclick="switchTab('citizen_portal')">
+            <span>Report Problem</span>
+          </button>
+        `;
+        switchTab("citizen_portal");
+      }
+
+      renderActiveRoleDesk(role);
+    }
+
+    function switchTab(tabId) {
+      activeTabId = tabId;
+      
+      const navButtons = document.querySelectorAll(".nav-btn");
+      navButtons.forEach(btn => btn.classList.remove("active"));
+      
+      const activeBtn = document.getElementById(`btn-${tabId}`);
+      if (activeBtn) activeBtn.classList.add("active");
+
+      document.querySelectorAll(".page-section").forEach(sec => {
+        sec.classList.remove("active");
+      });
+      
+      const activeSec = document.getElementById(`sec-${tabId}`);
+      if (activeSec) activeSec.classList.add("active");
+
+      if (leafletMap) {
+        setTimeout(() => {
+          leafletMap.invalidateSize();
+        }, 100);
+      }
+    }
+
+    // ----------------- ROLE PORTAL DESK PANEL BUILDERS -----------------
+    function renderActiveRoleDesk(role) {
+      const pane = document.getElementById("active-role-desk-pane");
+      
+      if (role === "admin") {
+        pane.innerHTML = `
+          <div class="card">
+            <h3 style="color:var(--accent-secondary);">District Command Centre</h3>
+            <div class="item-list" style="margin-bottom:6px;">
+              <div class="item-row"><span>Role:</span> <strong>Collector / Admin</strong></div>
+              <div class="item-row"><span>Incidents Audited:</span> <strong>24 verified</strong></div>
+              <div class="item-row"><span>Net Cost Savings:</span> <strong style="color:var(--status-low);">₹1.32 Lakh</strong></div>
+            </div>
+            <div class="slider-box">
+              <span>District Budget Slider:</span>
+              <input type="range" id="widget-budget-slider" min="10000" max="100000" value="100000" oninput="widgetAdjustBudget(this.value)">
+              <strong id="widget-budget-val">₹1,00,000</strong>
+            </div>
+          </div>
+        `;
+      } else if (role === "citizen") {
+        pane.innerHTML = `
+          <div class="card">
+            <h3>Sunita Devi (Citizen Feedback)</h3>
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; font-size:0.75rem; display:flex; flex-direction:column; gap:4px;">
+              <div><strong>Ticket Status Timeline:</strong></div>
+              <div style="display:flex; flex-direction:column; gap:4px; font-size:0.7rem; margin-top:4px;">
+                <div style="color:var(--status-low);">✓ Received (Whisper Hindi)</div>
+                <div style="color:var(--status-low);">✓ Verified (Proximity Cluster)</div>
+                <div style="${currentStep >= 23 ? 'color:var(--status-low);' : 'color:var(--text-muted);'}">➔ Technician Assigned (Suresh)</div>
+                <div style="${currentStep >= 26 ? 'color:var(--status-low);' : 'color:var(--text-muted);'}">➔ Resolved (Sensors Verified)</div>
+              </div>
+            </div>
+            <div id="citizen-rating-card" style="display:none; border:1px solid var(--status-low); padding:12px; border-radius:8px; text-align:center;">
+              <strong style="color:var(--status-low); font-size:0.75rem;">⭐ Satisfaction review</strong>
+              <div class="star-bar" onclick="submitStarRating()">★★★★★</div>
+              <p style="font-size:0.62rem; color:var(--text-muted);">Tap stars to confirm water access</p>
+            </div>
+          </div>
+        `;
+      } else if (role === "worker") {
+        pane.innerHTML = `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Suresh's Gig Earnings</h3>
+              <span class="badge badge-operational">Online</span>
+            </div>
+            <div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:4px;">
+              <div>Rating: <strong>4.92 ★</strong></div>
+              <div>Today's payout: <strong style="color:var(--status-low);">${currentStep >= 26 ? '₹18,000' : '₹0'}</strong></div>
+              <div>Completed Tasks: <strong>24 jobs</strong></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ----------------- BRIEFING GENERATOR -----------------
+    function generateDailyBriefing() {
+      const el = document.getElementById("ai-briefing-text");
+      if (currentStep <= 1) {
+        el.innerHTML = `
+          <strong>GOOD MORNING, COLLECTOR</strong><br>
+          • 0 critical issues require immediate attention.<br>
+          • All block development models operating healthy.<br>
+          • ₹1.32 Lakh saved today via Rainwater Cistern bypass reuse configurations.
+        `;
+      } else {
+        el.innerHTML = `
+          <strong>GOOD MORNING, COLLECTOR</strong><br>
+          • 3 critical issues require immediate attention (Pump #17 failure ranked highest).<br>
+          • 2 emerging risks detected by telemetry before citizen voice reports.<br>
+          • ₹1.32 Lakh saved today via Rainwater Cistern bypass reuse configurations.<br>
+          • Water reliability decreased 6% this week at Block A.
+        `;
+      }
+      showToast("✓ Briefing regenerated using live demo parameters.");
+    }
+
+    // ----------------- CROSS VILLAGE ANALYSIS -----------------
+    function runCrossVillageAI() {
+      const el = document.getElementById("cross-village-explain");
+      if (el) el.style.display = "block";
+      showToast("🧠 Analytical models loaded from Digital Memory.");
+    }
+
+    // ----------------- COLLECTOR DECISION OVERRIDES -----------------
+    function openOverrideDialog() {
+      const slot = document.getElementById("collector-override-input");
+      if (slot) slot.style.display = "flex";
+    }
+
+    function submitCollectorOverride() {
+      const action = document.getElementById("override-action-value").value;
+      const reason = document.getElementById("override-reason-value").value;
+      showToast("✓ Override logged to Digital Memory.");
+      logTimeline("18:07", `🙋 Override: ${action}. Reason: ${reason}`);
+      const slot = document.getElementById("collector-override-input");
+      if (slot) slot.style.display = "none";
+    }
+
+    // ----------------- MAP LAYER FILTERS -----------------
+    function filterMapLayer(layerType) {
+      document.querySelectorAll(".map-filter-btn").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      
+      showToast(`Filter applied: showing ${layerType} layers on GIS twin`);
+
+      if (!leafletMap) return;
+
+      // Clear map first
+      if (mapRoute) { leafletMap.removeLayer(mapRoute); mapRoute = null; }
+      if (mapWorker) { leafletMap.removeLayer(mapWorker); mapWorker = null; }
+
+      if (layerType === "critical" || layerType === "water") {
+        mapAsset.addTo(leafletMap);
+      } else if (layerType === "risk") {
+        // Draw risk buffer circle
+        mapRoute = L.circle([23.284, 77.451], {
+          radius: 200,
+          color: "var(--status-critical)",
+          fillColor: "var(--status-critical)",
+          fillOpacity: 0.15
+        }).addTo(leafletMap).bindPopup("Expanding risk warning area");
+      } else if (layerType === "equity") {
+        // Draw Remote Hamlet highlight
+        mapRoute = L.circleMarker([23.282, 77.449], {
+          radius: 12,
+          color: "var(--status-high)",
+          fillColor: "var(--status-high)",
+          fillOpacity: 0.8
+        }).addTo(leafletMap).bindPopup("Remote Hamlet (Water level 47%)");
+      }
+    }
+
+    // ----------------- CITIZEN SIMULATOR ACTIONS -----------------
+    function startVoiceRecord() {
+      const txt = document.getElementById("voice-rec-text");
+      if (txt) txt.style.display = "block";
+    }
+
+    function simulatePhotoAttached() {
+      const phot = document.getElementById("photo-indicator");
+      if (phot) phot.style.display = "block";
+      showToast("✓ Image attached successfully");
+    }
+
+    function submitStarRating() {
+      showToast("⭐ Feedback registered into digital memory ledger.");
+      const card = document.getElementById("citizen-rating-card");
+      if (card) card.style.display = "none";
+    }
+
+    // ----------------- COLLECTOR DECISION ACTION -----------------
+    function approveCollectorRepair() {
+      showToast("✓ Collector Approved Repair grant funding.");
+      logTimeline("18:07", "✓ Collector sanctioned repair grant of ₹18,000.");
+    }
+
+    // ----------------- SUB SLOT MUTATORS -----------------
+    function setBriefing(text) {
+      // Handled by briefing generator
+    }
+    function setWidgetsSlot(html) {
+      const el = document.getElementById("dashboard-widgets-slot");
+      if (el) el.innerHTML = html;
+    }
+    function setIncidentsSlot(html) {
+      const el = document.getElementById("incidents-panel-slot");
+      if (el) el.innerHTML = `<h3>Incident Intelligence Workspace</h3>` + html;
+    }
+    function setWhatIfSlot(html) {
+      const el = document.getElementById("whatif-panel-slot");
+      if (el) el.innerHTML = html;
+    }
+    function setOutcomeSlot(html) {
+      const el = document.getElementById("outcome-panel-slot");
+      if (el) el.innerHTML = html;
+    }
+
+    // ----------------- DYNAMIC BUDGET OPTIMIZER -----------------
+    function widgetAdjustBudget(val) {
+      // update text values
+      const valText = document.getElementById("widget-budget-val");
+      if (valText) valText.innerText = `₹${Number(val).toLocaleString()}`;
+      
+      const mainValText = document.getElementById("budget-slider-val");
+      if (mainValText) mainValText.innerText = `₹${Number(val).toLocaleString()}`;
+
+      // synchronize sliders
+      const mainSlider = document.getElementById("main-budget-slider");
+      if (mainSlider) mainSlider.value = val;
+
+      const widgetSlider = document.getElementById("widget-budget-slider");
+      if (widgetSlider) widgetSlider.value = val;
+
+      // perform calculations
+      adjustBudgetRange(val);
+    }
+
+    function adjustBudgetRange(val) {
+      const sliderVal = document.getElementById("budget-slider-val");
+      if (sliderVal) sliderVal.innerText = `₹${Number(val).toLocaleString()}`;
+      
+      const listEl = document.getElementById("budget-prioritized-projects");
+      if (!listEl) return;
+      
+      const options = [
+        { name: "Pump #17 Winding Repair", cost: 18000 },
+        { name: "Rainwater Cistern Rehab", cost: 25000 },
+        { name: "Streetlight Cluster C", cost: 12000 }
+      ];
+      
+      let remaining = Number(val);
+      let html = "";
+      
+      options.forEach(o => {
+        const canFund = remaining >= o.cost;
+        if (canFund) remaining -= o.cost;
+        
+        html += `
+          <div class="item-row" style="opacity:${canFund ? 1.0 : 0.5}; padding:6px 10px;">
+            <span>${o.name} (₹${o.cost.toLocaleString()})</span>
+            <strong style="color:${canFund ? 'var(--status-low)' : 'var(--status-critical)'};">${canFund ? 'FUNDED' : 'UNFUNDED'}</strong>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
+    }
+
+    // ----------------- GIG DESK SIMULATION -----------------
+    let countdownInterval;
+    let currentGigStep = 0;
+
+    function triggerIncomingPing() {
+      const overlay = document.getElementById("worker-ping-overlay");
+      overlay.classList.add("active");
+      
+      const progress = document.getElementById("ping-progress");
+      progress.style.transition = "none";
+      progress.style.width = "100%";
+      progress.offsetHeight; 
+      progress.style.transition = "width 15s linear";
+      progress.style.width = "0%";
+
+      playRinger();
+      let soundCount = 0;
+      countdownInterval = setInterval(() => {
+        soundCount++;
+        if (soundCount < 10) playRinger();
+        else rejectTask();
+      }, 1500);
+    }
+
+    function acceptTask() {
+      clearInterval(countdownInterval);
+      document.getElementById("worker-ping-overlay").classList.remove("active");
+      currentGigStep = 1;
+      showToast("👨‍🔧 Suresh accepted task coordinates");
+    }
+
+    function rejectTask() {
+      clearInterval(countdownInterval);
+      document.getElementById("worker-ping-overlay").classList.remove("active");
+      showToast("❌ Task declined");
+    }
+
+    // ----------------- WORKER CHECKLIST STEPS -----------------
+    function resetWorkerChecklist() {
+      currentGigStep = 0;
+      for (let i = 1; i <= 4; i++) {
+        const item = document.getElementById(`w-check-${i}`);
+        if (item) {
+          item.className = "checklist-step";
+          item.style.opacity = "0.5";
+        }
+      }
+      const activeItem = document.getElementById("w-check-1");
+      if (activeItem) {
+        activeItem.className = "checklist-step active";
+        activeItem.style.opacity = "1";
+      }
+    }
+
+    function completeChecklistStep(stepNum) {
+      currentGigStep = stepNum + 1;
+      const doneItem = document.getElementById(`w-check-${stepNum}`);
+      if (doneItem) doneItem.className = "checklist-step completed";
+      const nextItem = document.getElementById(`w-check-${stepNum + 1}`);
+      if (nextItem) {
+        nextItem.className = "checklist-step active";
+        nextItem.style.opacity = "1";
+      }
+    }
+
+    // ----------------- AUTOMATION TIMELINE SCHEDULER -----------------
+    let demoInterval = null;
+    let isPlaying = false;
+    let demoSpeed = 1;
+
+    function togglePlayback() {
+      const startBtn = document.getElementById("btn-start");
+      
+      if (isPlaying) {
+        isPlaying = false;
+        clearInterval(demoInterval);
+        startBtn.innerText = "RESUME DEMO";
+        showToast("⏸️ Demo paused");
+      } else {
+        isPlaying = true;
+        startBtn.innerText = "PAUSE";
+        showToast("▶️ Demo active");
+        runTimelineLoop();
+      }
+    }
+
+    function setDemoSpeed(speed) {
+      demoSpeed = speed;
+      document.querySelectorAll(".speed-btn").forEach(btn => btn.classList.remove("active"));
+      document.getElementById(`speed-${speed}`).classList.add("active");
+      
+      if (isPlaying) {
+        clearInterval(demoInterval);
+        runTimelineLoop();
+      }
+    }
+
+    function runTimelineLoop() {
+      const intervalMs = Math.round(3000 / demoSpeed);
+      
+      demoInterval = setInterval(() => {
+        currentStep++;
+        if (currentStep > SCENARIO_STEPS.length) {
+          clearInterval(demoInterval);
+          isPlaying = false;
+          document.getElementById("btn-start").innerText = "START DEMO";
+          showToast("🏁 Demo completed");
+          return;
+        }
+        executeStep(currentStep);
+      }, intervalMs);
+    }
+
+    function executeStep(stepNum) {
+      currentStep = stepNum;
+      
+      document.getElementById("hud-step-title").innerText = `Step ${stepNum}: ${SCENARIO_STEPS[stepNum - 1].title}`;
+      document.getElementById("hud-step-num").innerText = `Step ${stepNum}/34`;
+      document.getElementById("hud-step-desc").innerText = SCENARIO_STEPS[stepNum - 1].desc;
+      
+      SCENARIO_STEPS[stepNum - 1].run();
+      renderStepGridHUD();
+    }
+
+    function renderStepGridHUD() {
+      const grid = document.getElementById("steps-progress-nav");
+      let html = "";
+      for (let i = 1; i <= 34; i++) {
+        let cls = "step-nav-dot";
+        if (i < currentStep) cls += " completed";
+        if (i === currentStep) cls += " active";
+        html += `<div class="${cls}" title="Step ${i}: ${SCENARIO_STEPS[i-1].title}" onclick="jumpToStep(${i})"></div>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    function jumpToStep(stepNum) {
+      executeStep(stepNum);
+      showToast(`Jumped to Step ${stepNum}`);
+      if (isPlaying) {
+        clearInterval(demoInterval);
+        runTimelineLoop();
+      }
+    }
+
+    function restartDemo() {
+      currentStep = 1;
+      executeStep(1);
+      if (!isPlaying) togglePlayback();
+    }
+
+    function resetDemo() {
+      isPlaying = false;
+      clearInterval(demoInterval);
+      currentStep = 1;
+      executeStep(1);
+      document.getElementById("btn-start").innerText = "START DEMO";
+      showToast("🔄 Reset demo states");
+    }
+
+    // ----------------- TOASTER NOTIFICATIONS -----------------
+    function showToast(text) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerText = text;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function logTimeline(time, text) {
+      const container = document.getElementById("timeline-log-list");
+      const item = document.createElement("div");
+      item.className = "timeline-item active";
+      item.innerHTML = `<span class="timeline-time">${time}</span> <div>${text}</div>`;
+      container.prepend(item);
+      if (container.children.length > 8) container.lastElementChild.remove();
+    }
+
+    function clearTimeline() {
+      document.getElementById("timeline-log-list").innerHTML = "";
+    }
+
+    // ----------------- WEB AUDIO SYSTEM -----------------
+    let demoAudioCtx = null;
+    let sirenInterval = null;
+
+    function playRinger() {
+      try {
+        if (!demoAudioCtx) demoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let time = demoAudioCtx.currentTime;
+        let osc = demoAudioCtx.createOscillator();
+        let gain = demoAudioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(demoAudioCtx.destination);
+        osc.frequency.setValueAtTime(880, time);
+        gain.gain.setValueAtTime(0.12, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+        osc.start(time);
+        osc.stop(time + 0.3);
+      } catch(e){}
+    }
+
+    function toggleEmergency(active) {
+      const banner = document.getElementById("demo-emergency-banner");
+      clearInterval(sirenInterval);
+      if (active) {
+        banner.style.display = "flex";
+        playEmergencyBeep();
+        sirenInterval = setInterval(playEmergencyBeep, 1500);
+      } else {
+        banner.style.display = "none";
+      }
+    }
+
+    function playEmergencyBeep() {
+      try {
+        if (!demoAudioCtx) demoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let time = demoAudioCtx.currentTime;
+        let osc = demoAudioCtx.createOscillator();
+        let gain = demoAudioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(demoAudioCtx.destination);
+        osc.frequency.setValueAtTime(580, time);
+        osc.frequency.linearRampToValueAtTime(780, time + 0.3);
+        osc.frequency.linearRampToValueAtTime(580, time + 0.6);
+        gain.gain.setValueAtTime(0.04, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+        osc.start(time);
+        osc.stop(time + 0.75);
+      } catch(e){}
+    }
+
+    // ----------------- GIS MAP DRAWING ACTIONS -----------------
+    let leafletMap;
+    let mapAsset = null;
+    let mapRoute = null;
+    let mapWorker = null;
+
+    function initGISMap() {
+      leafletMap = L.map('map-canvas').setView([23.285, 77.452], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(leafletMap);
+
+      mapAsset = L.circleMarker([23.284, 77.451], {
+        radius: 8,
+        color: "#10b981",
+        fillColor: "#10b981",
+        fillOpacity: 0.8
+      }).addTo(leafletMap).bindPopup("Borewell Pump #17");
+    }
+
+    function updateGISMap(stepNum) {
+      if (!leafletMap) return;
+      if (mapRoute) { leafletMap.removeLayer(mapRoute); mapRoute = null; }
+      if (mapWorker) { leafletMap.removeLayer(mapWorker); mapWorker = null; }
+
+      if (stepNum === 1 || stepNum >= 26) {
+        mapAsset.setStyle({ color: "#10b981", fillColor: "#10b981" });
+      } else {
+        mapAsset.setStyle({ color: "#ef4444", fillColor: "#ef4444" });
+      }
+
+      if (stepNum === 7 || stepNum === 19) {
+        mapRoute = L.polyline([[23.284, 77.451], [23.282, 77.449]], {
+          color: "#0ea5e9",
+          weight: 4,
+          dashArray: "4, 6"
+        }).addTo(leafletMap);
+      }
+
+      if (stepNum === 23) {
+        mapRoute = L.polyline([[23.288, 77.458], [23.284, 77.451]], {
+          color: "#14b8a6",
+          weight: 4,
+          dashArray: "6, 6"
+        }).addTo(leafletMap);
+
+        mapWorker = L.circleMarker([23.288, 77.458], {
+          radius: 7,
+          color: "#14b8a6",
+          fillColor: "#14b8a6",
+          fillOpacity: 1.0
+        }).addTo(leafletMap).bindPopup("Suresh Kumar en route");
+      }
+    }
+
+    // ----------------- MODALS -----------------
+    // dialog close triggers
+    function openExplainModal() { document.getElementById("explain-modal").style.display = "flex"; }
+    function closeExplainModal() { document.getElementById("explain-modal").style.display = "none"; }
+
+    // Initialize Page
+    window.addEventListener("DOMContentLoaded", () => {
+      initGISMap();
+      populateCollectorRegistry();
+      switchRole("admin");
+      resetDemo();
+      adjustBudgetRange(100000);
+      generateDailyBriefing();
+    });
+  </script>
+</body>
+</html>
