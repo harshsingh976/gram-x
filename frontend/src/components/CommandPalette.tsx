@@ -115,6 +115,14 @@ export function CommandPalette({ isOpen, onClose, onNavigate, currentRole, onLog
         icon: <FileText className="w-4 h-4 text-indigo-600" />,
         action: () => { onNavigate('audit_accountability'); onClose(); }
       });
+      items.push({
+        id: 'nav-esg',
+        title: 'ESG+ Sustainability & Integrity Dashboard',
+        category: 'Navigation',
+        icon: <FileText className="w-4 h-4 text-emerald-600" />,
+        action: () => { onNavigate('esg_overview'); onClose(); },
+        badge: 'ESG+'
+      });
     }
 
     // Actions

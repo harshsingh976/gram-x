@@ -501,6 +501,7 @@ export async function fetchAuditLogs(params?: {
   if (!res.ok) throw new Error('Failed to fetch audit logs');
   return res.json();
 }
+export const fetchAuditChain = fetchAuditLogs;
 
 export function getAuditExportUrl(params?: Record<string, any>) {
   const query = new URLSearchParams();

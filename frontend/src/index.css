@@ -2827,3 +2827,19 @@ img[src=""], img:not([src]) { visibility: hidden; }
   .page-routing-container { padding: 0; }
 }
 
+/* ─── ANDROID & MOBILE HARDENING SUITE ─────────────────────── */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  .auth-input, .form-control {
+    min-height: 44px;
+  }
+
+  .container-fluid, .page-routing-container {
+    padding-left: max(12px, env(safe-area-inset-left, 12px));
+    padding-right: max(12px, env(safe-area-inset-right, 12px));
+  }
+}
+

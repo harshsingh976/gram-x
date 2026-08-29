@@ -58,10 +58,10 @@ import AdminLanding from './components/landings/AdminLanding';
 import CollectorLanding from './components/landings/CollectorLanding';
 import AccessDenied from './components/AccessDenied';
 import LoadingState from './components/LoadingState';
-
+import ESGOverview from './components/common/ESGOverview';
 
 // Simple Router Helper
-type Tab = 'command_center' | 'village_dashboard' | 'gis_map' | 'incidents' | 'incident_detail' | 'asset_intel' | 'project_intel' | 'what_if' | 'resource_opt' | 'worker_portal' | 'citizen_portal' | 'cross_analytics' | 'ground_reality' | 'prediction_future' | 'money_budget' | 'equity_intel' | 'audit_accountability' | 'crisis_intelligence' | 'data_intelligence' | 'responsible_ai' | 'new_citizen_portal' | 'new_worker_portal' | 'new_admin_portal' | 'new_collector_portal' | 'blackrock_login' | 'blackrock_auth' | 'portal_first_page' | 'profile';
+type Tab = 'command_center' | 'village_dashboard' | 'gis_map' | 'incidents' | 'incident_detail' | 'asset_intel' | 'project_intel' | 'what_if' | 'resource_opt' | 'worker_portal' | 'citizen_portal' | 'cross_analytics' | 'ground_reality' | 'prediction_future' | 'money_budget' | 'equity_intel' | 'audit_accountability' | 'crisis_intelligence' | 'data_intelligence' | 'responsible_ai' | 'new_citizen_portal' | 'new_worker_portal' | 'new_admin_portal' | 'new_collector_portal' | 'blackrock_login' | 'blackrock_auth' | 'portal_first_page' | 'profile' | 'esg_overview';
 
 export type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'AUTH_UNAUTHENTICATED';
 
@@ -727,6 +727,7 @@ export default function App() {
     }
     return (
       <BlackRockIndiaAuth 
+        defaultRole={getSubdomainRole() || 'citizen'}
         onLoginSuccess={(tokenVal, roleVal, usernameVal, nameVal) => {
           const uRole = roleVal as UserRole;
           localStorage.setItem('token', tokenVal);
@@ -2069,6 +2070,9 @@ export default function App() {
           )}
           {activeTab === 'portal_first_page' && (
             <PortalFirstPage onLoginClick={() => setActiveTab('blackrock_login')} />
+          )}
+          {activeTab === 'esg_overview' && (
+            <ESGOverview />
           )}
 
           {/* 16. WORKER PORTAL */}
