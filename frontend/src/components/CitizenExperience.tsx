@@ -532,7 +532,7 @@ export default function CitizenExperience({
           </div>
 
           {/* KPI Stats Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
             {[
               { label: 'My Complaints', value: totalComplaints, accentColor: '#0B1F3A', subLabel: 'Total registered', emoji: '📋', bg: '#e0f2fe' },
               { label: 'In Progress', value: inProgressComplaints, accentColor: '#155EEF', subLabel: 'Under resolution', emoji: '⚙️', bg: '#eff6ff' },

@@ -222,7 +222,7 @@ function LiveSLACard({ task }: { task: WorkerTask }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '11px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', fontSize: '11px' }}>
         <div>
           <span style={{ color: '#64748b', display: 'block', fontWeight: 600 }}>Priority & Window</span>
           <strong style={{ color: priorityCfg.color, fontWeight: 700 }}>
