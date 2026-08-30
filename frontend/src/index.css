@@ -2836,10 +2836,15 @@ img[src=""], img:not([src]) { visibility: hidden; }
   .auth-input, .form-control {
     min-height: 44px;
   }
+}
 
-  .container-fluid, .page-routing-container {
-    padding-left: max(12px, env(safe-area-inset-left, 12px));
-    padding-right: max(12px, env(safe-area-inset-right, 12px));
+/* ─── ACCESSIBILITY: REDUCED MOTION ────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
