@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { 
   Activity, Map as MapIcon, ShieldAlert, Cpu, Layers, Wrench, 
   UserCheck, Users, Radio, HelpCircle, TrendingUp,
@@ -17,22 +17,23 @@ import type {
   ReuseRecommendation, DemoStatus, UserRole 
 } from './types';
 
-// Modular component imports
-import CentralGovernance from './components/CentralGovernance';
-import CitizenExperience from './components/CitizenExperience';
-import GroundReality from './components/GroundReality';
-import ProblemIntel from './components/ProblemIntel';
-import PredictionFuture from './components/PredictionFuture';
-import MoneyBudget from './components/MoneyBudget';
-import ResourceIntel from './components/ResourceIntel';
-import AssetIntel from './components/AssetIntel';
-import ProjectIntel from './components/ProjectIntel';
-import EquityIntel from './components/EquityIntel';
-import AuditAccountability from './components/AuditAccountability';
-import CrisisIntelligence from './components/CrisisIntelligence';
-import DataIntelligence from './components/DataIntelligence';
-import ResponsibleAI from './components/ResponsibleAI';
+// Dynamic Lazy Component Imports for optimized bundle delivery
+const CentralGovernance = React.lazy(() => import('./components/CentralGovernance'));
+const GroundReality = React.lazy(() => import('./components/GroundReality'));
+const ProblemIntel = React.lazy(() => import('./components/ProblemIntel'));
+const PredictionFuture = React.lazy(() => import('./components/PredictionFuture'));
+const MoneyBudget = React.lazy(() => import('./components/MoneyBudget'));
+const ResourceIntel = React.lazy(() => import('./components/ResourceIntel'));
+const AssetIntel = React.lazy(() => import('./components/AssetIntel'));
+const ProjectIntel = React.lazy(() => import('./components/ProjectIntel'));
+const EquityIntel = React.lazy(() => import('./components/EquityIntel'));
+const AuditAccountability = React.lazy(() => import('./components/AuditAccountability'));
+const CrisisIntelligence = React.lazy(() => import('./components/CrisisIntelligence'));
+const DataIntelligence = React.lazy(() => import('./components/DataIntelligence'));
+const ResponsibleAI = React.lazy(() => import('./components/ResponsibleAI'));
+const ESGOverview = React.lazy(() => import('./components/common/ESGOverview'));
 
+import CitizenExperience from './components/CitizenExperience';
 import CitizenPortal from './components/CitizenPortal';
 import TechnicianPortal from './components/TechnicianPortal';
 import AdminPortal from './components/AdminPortal';
@@ -49,7 +50,7 @@ import { useLanguage } from './i18n';
 import LiveClock from './components/LiveClock';
 import NetworkStatus from './components/NetworkStatus';
 import LanguageSelector from './components/LanguageSelector';
-
+import { CardSkeleton } from './components/common/UIComponents';
 
 import CitizenLanding from './components/landings/CitizenLanding';
 import WorkerLanding from './components/landings/WorkerLanding';
@@ -57,7 +58,6 @@ import AdminLanding from './components/landings/AdminLanding';
 import CollectorLanding from './components/landings/CollectorLanding';
 import AccessDenied from './components/AccessDenied';
 import LoadingState from './components/LoadingState';
-import ESGOverview from './components/common/ESGOverview';
 
 // Simple Router Helper
 type Tab = 'command_center' | 'village_dashboard' | 'gis_map' | 'incidents' | 'incident_detail' | 'asset_intel' | 'project_intel' | 'what_if' | 'resource_opt' | 'worker_portal' | 'citizen_portal' | 'cross_analytics' | 'ground_reality' | 'prediction_future' | 'money_budget' | 'equity_intel' | 'audit_accountability' | 'crisis_intelligence' | 'data_intelligence' | 'responsible_ai' | 'new_citizen_portal' | 'new_worker_portal' | 'new_admin_portal' | 'new_collector_portal' | 'blackrock_login' | 'blackrock_auth' | 'portal_first_page' | 'profile' | 'esg_overview';
@@ -1419,6 +1419,7 @@ export default function App() {
             </div>
           )}
 
+          <Suspense fallback={<div className="p-6 space-y-4"><CardSkeleton /><CardSkeleton /></div>}>
           {/* 1. CENTRAL COMMAND CENTRE (DISTRICT ADMIN) */}
           {activeTab === 'command_center' && (
             <CentralGovernance onSelectVillage={setSelectedVillageId} selectedVillageId={selectedVillageId} villages={villages} incidents={incidents} tasks={allTasks} />
@@ -2160,6 +2161,7 @@ export default function App() {
               </div>
             </div>
           )}
+          </Suspense>
         </div>
 
         {/* Government Footer */}

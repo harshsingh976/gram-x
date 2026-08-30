@@ -1,12 +1,12 @@
 # 🏛️ GRAM-X: Grassroots Resource, Action & Intelligence Network
 ### Enterprise Multilingual Voice AI, 3D Government Digital Twin & Autonomous Civic Governance Platform
 
-[![Master Test Suite](https://img.shields.io/badge/Master%20Tests-135%2F135%20Passed%20(100%25)-success?style=flat-square&logo=pytest)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/walkthrough.md)
-[![Vite + React](https://img.shields.io/badge/Vite%208.2-TypeScript%205.5-blue?style=flat-square&logo=vite)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/frontend)
-[![Render Ready](https://img.shields.io/badge/Deploy%20on-Render-46E3B7?style=flat-square&logo=render)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/render.yaml)
-[![Python FastAPI](https://img.shields.io/badge/FastAPI-3.11%20Async-009688?style=flat-square&logo=fastapi)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/backend)
-[![3D Digital Twin](https://img.shields.io/badge/3D%20Digital%20Twin-WebGL%20%7C%20Unity%20C%23-black?style=flat-square&logo=unity)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/digital_twin_unity)
-[![Security Hardening](https://img.shields.io/badge/Security-AES--GCM%20%7C%20SHA--256%20Hash--Chain-darkred?style=flat-square)](file:///C:/Users/jaiva/.gemini/antigravity/scratch/gram-x/backend/app/services/crypto_vault.py)
+[![Master Test Suite](https://img.shields.io/badge/Master%20Tests-135%2F135%20Passed%20(100%25)-success?style=flat-square&logo=pytest)](./backend)
+[![Vite + React](https://img.shields.io/badge/Vite%208.2-TypeScript%205.5-blue?style=flat-square&logo=vite)](./frontend)
+[![Render Ready](https://img.shields.io/badge/Deploy%20on-Render-46E3B7?style=flat-square&logo=render)](./render.yaml)
+[![Python FastAPI](https://img.shields.io/badge/FastAPI-3.11%20Async-009688?style=flat-square&logo=fastapi)](./backend)
+[![3D Digital Twin](https://img.shields.io/badge/3D%20Digital%20Twin-WebGL%20%7C%20Unity%20C%23-black?style=flat-square&logo=unity)](./frontend)
+[![Security Hardening](https://img.shields.io/badge/Security-AES--GCM%20%7C%20SHA--256%20Hash--Chain-darkred?style=flat-square)](./backend/app/services/crypto_vault.py)
 
 ---
 

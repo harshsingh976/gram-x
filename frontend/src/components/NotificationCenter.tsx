@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Bell, X, CheckCircle2, AlertTriangle, Clock, ArrowRight, Info, CheckCircle, Zap, Shield } from "lucide-react";
 import * as api from "../api";
 import { useLanguage } from "../i18n";
@@ -76,10 +76,14 @@ export function NotificationCenter({ isOpen, onClose, onNavigateTab, incidents }
     if (isOpen) loadNotifications();
   }, [isOpen, loadNotifications]);
 
-  // 30-second polling while panel is open
+  // 30-second polling while panel is open and tab is active
   useEffect(() => {
     if (!isOpen) return;
-    const interval = setInterval(loadNotifications, 30000);
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        loadNotifications();
+      }
+    }, 30000);
     return () => clearInterval(interval);
   }, [isOpen, loadNotifications]);
 
