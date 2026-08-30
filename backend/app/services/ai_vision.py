@@ -1,4 +1,4 @@
-﻿"""
+"""
 GRAM-X Enterprise Computer Vision & Image Intelligence Pipeline
 Engine: NumPy + Pillow Image Processing & Calibrated Feature Classifier
 Capabilities:
@@ -20,13 +20,23 @@ import hashlib
 import io
 import math
 from typing import Dict, Any, Tuple, Optional
-import numpy as np
-from PIL import Image, ImageOps, ImageFilter
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    from PIL import Image, ImageOps, ImageFilter
+except ImportError:
+    Image = None
+    ImageOps = None
+    ImageFilter = None
 
 MODEL_NAME = "GramX-Vision-InspecNet-v2.1"
 MODEL_VERSION = "2.1.0"
 
-def _decode_image(photo_base64: str) -> Tuple[Image.Image, bytes, str]:
+def _decode_image(photo_base64: str) -> Tuple[Any, bytes, str]:
     """Decodes raw base64 string or data-URI into PIL Image and raw bytes."""
     header = "image/jpeg"
     b64_payload = photo_base64
@@ -36,7 +46,10 @@ def _decode_image(photo_base64: str) -> Tuple[Image.Image, bytes, str]:
         header = parts[0].replace("data:", "")
     
     img_bytes = base64.b64decode(b64_payload)
-    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    if Image is not None:
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    else:
+        img = None
     return img, img_bytes, header
 
 def _compute_image_quality(img_np: np.ndarray) -> Dict[str, Any]:

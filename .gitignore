@@ -86,12 +86,11 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# IDE & Editor Specific
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-*.db-shm
-*.db-wal
-backend/*.db*
+# Binaries & Executables
+*.exe
+*.dll
+*.pyd
+
+# Temporary Runtimes & Scratch
+python311/
+.gemini/
