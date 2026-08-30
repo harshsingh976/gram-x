@@ -193,7 +193,7 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
     request.state.correlation_id = correlation_id
 
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
     now = time.time()
     path = request.url.path
     method = request.method
@@ -303,6 +303,7 @@ app.include_router(ws_router) # Also expose at root /ws
 
 
 @app.get("/health")
+@app.get("/api/health")
 def health_check():
     """Liveness probe reporting backend availability."""
     return {

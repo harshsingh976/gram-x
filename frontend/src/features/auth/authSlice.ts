@@ -12,17 +12,16 @@ export interface AuthState {
   error: string | null;
 }
 
-const initialToken = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
-const initialRole = typeof localStorage !== 'undefined' ? (localStorage.getItem('role') as UserRole) || 'admin' : 'admin';
+const initialRole = typeof localStorage !== 'undefined' ? (localStorage.getItem('role') as UserRole) || 'citizen' : 'citizen';
 const initialUsername = typeof localStorage !== 'undefined' ? localStorage.getItem('username') || '' : '';
 const initialFullName = typeof localStorage !== 'undefined' ? localStorage.getItem('fullName') || '' : '';
 
 const initialState: AuthState = {
   token: initialToken,
   refreshToken: typeof localStorage !== 'undefined' ? localStorage.getItem('refreshToken') : null,
-  role: initialRole,
-  username: initialUsername,
-  fullName: initialFullName,
+  role: initialToken ? initialRole : 'citizen',
+  username: initialToken ? initialUsername : '',
+  fullName: initialToken ? initialFullName : '',
   status: initialToken ? 'authenticated' : 'unauthenticated',
   error: null,
 };
@@ -92,7 +91,7 @@ export const authSlice = createSlice({
     clearAuthSession: (state) => {
       state.token = null;
       state.refreshToken = null;
-      state.role = 'admin';
+      state.role = 'citizen';
       state.username = '';
       state.fullName = '';
       state.status = 'unauthenticated';
@@ -125,7 +124,7 @@ export const authSlice = createSlice({
       .addCase(logoutAsync.fulfilled, (state) => {
         state.token = null;
         state.refreshToken = null;
-        state.role = 'admin';
+        state.role = 'citizen';
         state.username = '';
         state.fullName = '';
         state.status = 'unauthenticated';

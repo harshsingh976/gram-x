@@ -4,6 +4,7 @@ import {
   CheckCircle2, XCircle, X, ArrowRight, Globe, Phone, Shield
 } from 'lucide-react';
 import type { UserRole } from '../types';
+import { useLanguage } from '../i18n';
 
 // ─── Types ────────────────────────────────────────────────
 type Tab = string;
@@ -350,29 +351,30 @@ export function GovFooter({
   onNavigate: (tab: Tab) => void;
   role: UserRole;
 }) {
+  const { t } = useLanguage();
   const year = new Date().getFullYear();
 
   const footerLinks: Array<{ label: string; tab: Tab }> = role === 'citizen'
     ? [
-        { label: 'Citizen Services', tab: 'citizen_portal' },
-        { label: 'My Profile',       tab: 'profile' },
+        { label: t('nav.citizen_portal'), tab: 'citizen_portal' },
+        { label: t('profile'),            tab: 'profile' },
       ]
     : role === 'worker'
     ? [
-        { label: 'My Tasks', tab: 'worker_portal' },
-        { label: 'Profile',  tab: 'profile' },
+        { label: t('nav.my_tasks'), tab: 'worker_portal' },
+        { label: t('profile'),      tab: 'profile' },
       ]
     : role === 'district'
     ? [
-        { label: 'Command Centre', tab: 'command_center' },
-        { label: 'District Overview', tab: 'village_dashboard' },
-        { label: 'Profile',          tab: 'profile' },
+        { label: t('nav.dashboard'),                 tab: 'command_center' },
+        { label: t('collector.district_overview'),  tab: 'village_dashboard' },
+        { label: t('profile'),                      tab: 'profile' },
       ]
     : [
-        { label: 'Dashboard',  tab: 'village_dashboard' },
-        { label: 'Complaints', tab: 'incidents' },
-        { label: 'Budget',     tab: 'money_budget' },
-        { label: 'Profile',    tab: 'profile' },
+        { label: t('nav.dashboard'),       tab: 'village_dashboard' },
+        { label: t('nav.incidents'),       tab: 'incidents' },
+        { label: t('nav.budget_treasury'), tab: 'money_budget' },
+        { label: t('profile'),             tab: 'profile' },
       ];
 
   return (

@@ -11,28 +11,107 @@ const API_BASE = (function getApiBase(): string {
 })();
 
 // Helper to construct headers with JWT auth if present
-function getHeaders(token?: string) {
+export function getHeaders(token?: string) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  const activeToken = token || localStorage.getItem('token');
+  const activeToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null);
   if (activeToken) {
     headers['Authorization'] = `Bearer ${activeToken}`;
   }
   return headers;
 }
 
-export async function login(username: string, password: string) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Incorrect credentials' }));
-    throw new Error(err.detail || 'Incorrect credentials');
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers = new Headers(options.headers || {});
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
   }
-  return res.json(); // returns { access_token, token_type, refresh_token, role, username, name }
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch (err: any) {
+    throw new Error('Unable to connect to server. Please check your internet connection.');
+  }
+
+  if (res.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/refresh') && !url.includes('/auth/signup')) {
+    const refreshToken = typeof localStorage !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    if (refreshToken) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('token', data.access_token);
+              if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
+            }
+            isRefreshing = false;
+            onRefreshed(data.access_token);
+            headers.set('Authorization', `Bearer ${data.access_token}`);
+            return fetch(url, { ...options, headers });
+          } else {
+            isRefreshing = false;
+            logout();
+          }
+        } catch {
+          isRefreshing = false;
+          logout();
+        }
+      } else {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken) => {
+            headers.set('Authorization', `Bearer ${newToken}`);
+            resolve(fetch(url, { ...options, headers }));
+          });
+        });
+      }
+    }
+  }
+
+  return res;
+}
+
+export async function login(username: string, password: string) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Incorrect credentials' }));
+      throw new Error(err.detail || 'Incorrect user ID or password.');
+    }
+    return res.json();
+  } catch (err: any) {
+    if (err.message && err.message.includes('fetch')) {
+      throw new Error('Unable to connect to the authentication server. Please check your connection.');
+    }
+    throw err;
+  }
 }
 
 export async function signup(req: {
@@ -73,19 +152,22 @@ export async function logout() {
       headers: getHeaders()
     });
   } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-    localStorage.removeItem('fullName');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('role');
+      localStorage.removeItem('username');
+      localStorage.removeItem('fullName');
+    }
   }
 }
 
 export async function getMe() {
-  const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: getHeaders()
-  });
-  if (!res.ok) throw new Error('Failed to fetch user');
+  const res = await authenticatedFetch(`${API_BASE}/auth/me`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Session expired' }));
+    throw new Error(err.detail || 'Session expired. Please log in again.');
+  }
   return res.json();
 }
 

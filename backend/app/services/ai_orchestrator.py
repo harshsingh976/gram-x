@@ -1,4 +1,4 @@
-﻿"""
+"""
 GRAM-X Enterprise AI Orchestrator, MLOps & Model Governance Layer
 Capabilities:
 1. Task-to-Model Intelligent Routing (Vision, Voice, Hybrid RAG, Tabular Triage, What-If Simulation)
@@ -12,7 +12,7 @@ import time
 import uuid
 import re
 import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 
 from app.services.ai_vision import analyze_infrastructure_image

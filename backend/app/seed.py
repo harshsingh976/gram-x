@@ -16,15 +16,8 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def seed_database(db: Session):
-    # Clear existing tables (optional, let's drop and recreate for clean seed)
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    
-    # Reset audit hash chain tracker
-    import app.models as models_mod
-    models_mod._last_audit_hash = None
-
-    print("Seeding database...")
+    from app.seed_1000_users import seed_1000_database
+    seed_1000_database(db)
 
     # 1. Create Villages
     # Coordinates centered around Madhya Pradesh/Bhopal region (lat: 23.25, lng: 77.41)

@@ -1,4 +1,4 @@
-﻿export const hi: Record<string, string> = {
+export const hi: Record<string, string> = {
   // ─── Header & Brand ──────────────────────────────
   "brand.title": "ग्राम-एक्स (GRAM-X)",
   "brand.subtitle": "जमीनी संसाधन, कार्रवाई एवं आसूचना नेटवर्क • डिजिटल ग्रामीण शासन मंच",
@@ -370,5 +370,70 @@
   "notifications.filter.all": "सभी",
   "notifications.filter.urgent": "अत्यावश्यक एवं SLA",
   "notifications.filter.tasks": "कार्य",
-  "notifications.view_details": "विवरण देखें"
+  "notifications.view_details": "विवरण देखें",
+
+  // ─── Dynamic Greetings & Headers ──────────────────────────
+  "greeting.welcome_back": "वापसी पर स्वागत है",
+  "greeting.good_morning": "शुभ प्रभात",
+  "greeting.good_afternoon": "शुभ दोपहर",
+  "greeting.good_evening": "शुभ संध्या",
+
+  // ─── Citizen Portal Strings ──────────────────────────────
+  "citizen.overview": "नागरिक शिकायत विवरण",
+  "citizen.active_complaints": "सक्रिय शिकायतें",
+  "citizen.resolved_complaints": "निस्तारित शिकायतें",
+  "citizen.recent_activity": "हालिया शिकायत गतिविधि",
+  "citizen.create_new": "नई शिकायत दर्ज करें",
+  "citizen.write_complaint": "शिकायत पंजीकरण प्रपत्र",
+  "citizen.problem_title": "समस्या का शीर्षक / सारांश",
+  "citizen.problem_title_ph": "उदा. वार्ड 4 में पाइपलाइन रिसाव या स्ट्रीटलाइट बंद",
+  "citizen.category": "विभाग / बुनियादी ढांचा श्रेणी",
+  "citizen.description": "विस्तृत विवरण एवं निकटतम पहचान चिन्ह",
+  "citizen.description_ph": "बताएं कि क्या समस्या है, निकटतम लैंडमार्क, और कितने परिवार प्रभावित हैं...",
+  "citizen.evidence_photo": "फोटो प्रमाण संलग्न करें (वैकल्पिक)",
+  "citizen.upload_photo": "डिवाइस से फोटो अपलोड करें",
+  "citizen.no_complaints_title": "कोई शिकायत दर्ज नहीं है",
+  "citizen.no_complaints_desc": "आपने अभी तक कोई शिकायत दर्ज नहीं की है। बुनियादी ढांचे की समस्याओं के त्वरित समाधान हेतु रिपोर्ट करें।",
+  "citizen.my_complaints_title": "मेरी पंजीकृत शिकायतें",
+  "citizen.verified_success": "नागरिक द्वारा कार्य सत्यापन पूर्ण",
+  "citizen.feedback_prompt": "मरम्मत की गुणवत्ता एवं समयबद्धता का मूल्यांकन करें",
+
+  // ─── Field Worker Portal Strings ──────────────────────────
+  "worker.today_work": "आज की कार्य सूची",
+  "worker.assigned": "आवंटित कार्य",
+  "worker.completed": "पूर्ण मरम्मत कार्य",
+  "worker.no_tasks_title": "सभी कार्य पूर्ण हैं",
+  "worker.no_tasks_desc": "वर्तमान में कोई नया कार्य लंबित नहीं है। पंचायत से नया आवंटन होने पर यहाँ प्रदर्शित होगा।",
+  "worker.accept_task": "कार्य स्वीकार करें",
+  "worker.upload_evidence": "मरम्मत प्रमाण अपलोड करें",
+  "worker.request_price_increase": "लागत संशोधन अनुरोध",
+  "worker.base_payout": "मानक आधार दर",
+  "worker.requested_extra": "अतिरिक्त लागत राशि",
+  "worker.justification": "कार्यक्षेत्र विस्तार का कारण",
+  "worker.payout_status": "भुगतान स्थिति",
+  "worker.paid": "भुगतान पूर्ण",
+  "worker.pending": "समीक्षाधीन",
+
+  // ─── Admin & Governance Strings ──────────────────────────
+  "admin.overview": "ग्राम पंचायत शासन कमांड",
+  "admin.total_complaints": "कुल शिकायतें",
+  "admin.open_cases": "खुले मामले",
+  "admin.resolved_cases": "निस्तारित मामले",
+  "admin.resolution_rate": "समाधान दर",
+  "admin.dispatch_worker": "फील्ड कर्मी को कार्य सौंपें",
+  "admin.ai_triage": "AI वर्गीकरण एवं प्राथमिकता",
+  "admin.tamper_evident_chain": "क्रिप्टोग्राफिक SHA-256 ऑडिट ट्रेल",
+
+  // ─── Collector Portal Strings ────────────────────────────
+  "collector.district_overview": "जिला दंडाधिकारी निगरानी",
+  "collector.inter_village_equity": "अंतर-ग्राम विकास संतुलन",
+  "collector.crisis_intelligence": "आपदा एवं विसंगति विश्लेषण",
+
+  // ─── Connectivity & Common ───────────────────────────────
+  "common.toll_free": "राष्ट्रीय नागरिक हेल्पलाइन (टोल-फ्री)",
+  "common.emergency_contact": "1800-180-1555",
+  "common.back_online": "इंटरनेट पुनः सक्रिय। डेटा सिंक पूर्ण।",
+  "common.offline": "आप ऑफ़लाइन हैं। सहेजे गए रिकॉर्ड सिंक किए जा रहे हैं।",
+  "common.try_again": "पुनः प्रयास करें",
+  "common.learn_more": "और जानें"
 };

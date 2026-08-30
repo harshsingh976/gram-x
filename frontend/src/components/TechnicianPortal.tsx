@@ -11,6 +11,7 @@ import * as api from '../api';
 import LiveClock from './LiveClock';
 import NotificationTicker from './NotificationTicker';
 import NetworkStatus from './NetworkStatus';
+import { useLanguage } from '../i18n';
 
 
 // ─── Types ────────────────────────────────────────────────
@@ -1064,6 +1065,7 @@ export default function TechnicianPortal({
   onRefresh,
   showToast,
 }: TechnicianPortalProps) {
+  const { t } = useLanguage();
   const notify = showToast || ((msg: string) => alert(msg));
   const [tasks, setTasks] = useState<WorkerTask[]>(propTasks);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -1219,7 +1221,7 @@ export default function TechnicianPortal({
                   <Clock size={16} />
                 </div>
                 <div className="wp-kpi-val">{activeTasks.length}</div>
-                <div className="wp-kpi-label">Active Tasks</div>
+                <div className="wp-kpi-label">{t('worker.assigned')}</div>
               </div>
 
               <div className="wp-kpi-card kpi-card anim-fade-up">
@@ -1227,7 +1229,7 @@ export default function TechnicianPortal({
                   <CheckCircle2 size={16} />
                 </div>
                 <div className="wp-kpi-val">{completedTasks.length}</div>
-                <div className="wp-kpi-label">Completed</div>
+                <div className="wp-kpi-label">{t('worker.completed')}</div>
               </div>
 
               <div className="wp-kpi-card kpi-card anim-fade-up">
@@ -1235,7 +1237,7 @@ export default function TechnicianPortal({
                   <IndianRupee size={16} />
                 </div>
                 <div className="wp-kpi-val">₹{totalEarnings.toLocaleString('en-IN')}</div>
-                <div className="wp-kpi-label">Disbursed</div>
+                <div className="wp-kpi-label">{t('worker.paid')}</div>
               </div>
             </div>
 
@@ -1245,19 +1247,19 @@ export default function TechnicianPortal({
                 className={`wp-filter-tab ${filter === 'active' ? 'wp-filter-active' : ''}`}
                 onClick={() => setFilter('active')}
               >
-                Active ({activeTasks.length})
+                {t('worker.in_progress')} ({activeTasks.length})
               </button>
               <button
                 className={`wp-filter-tab ${filter === 'completed' ? 'wp-filter-active' : ''}`}
                 onClick={() => setFilter('completed')}
               >
-                Completed ({completedTasks.length})
+                {t('worker.completed')} ({completedTasks.length})
               </button>
               <button
                 className={`wp-filter-tab ${filter === 'all' ? 'wp-filter-active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                All ({tasks.length})
+                {t('notifications.filter.all')} ({tasks.length})
               </button>
             </div>
 
@@ -1265,9 +1267,9 @@ export default function TechnicianPortal({
             <div className="wp-task-list">
               {filteredTasks.length === 0 ? (
                 <div className="empty-state-container">
-                  <div className="empty-state-icon">🔧</div>
-                  <h5 className="empty-state-title">No active assignments</h5>
-                  <p className="empty-state-desc">You are available. New tasks will appear here when dispatched by the Panchayat Admin.</p>
+                  <div className="empty-state-icon">✓</div>
+                  <h5 className="empty-state-title">{t('worker.no_tasks_title')}</h5>
+                  <p className="empty-state-desc">{t('worker.no_tasks_desc')}</p>
                 </div>
               ) : (
                 filteredTasks.map(task => (

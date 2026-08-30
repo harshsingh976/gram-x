@@ -37,8 +37,7 @@ import CitizenPortal from './components/CitizenPortal';
 import TechnicianPortal from './components/TechnicianPortal';
 import AdminPortal from './components/AdminPortal';
 import CollectorPortal from './components/CollectorPortal';
-import BlackRockIndiaLogin from './components/BlackRockIndiaLogin';
-import BlackRockIndiaAuth from './components/BlackRockIndiaAuth';
+import GovAuthPortal from './components/GovAuthPortal';
 import PortalFirstPage from './components/PortalFirstPage';
 import SplashScreen from './components/SplashScreen';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -726,8 +725,8 @@ export default function App() {
       return <PortalFirstPage onLoginClick={loginHandler} />;
     }
     return (
-      <BlackRockIndiaAuth 
-        defaultRole={getSubdomainRole() || 'citizen'}
+      <GovAuthPortal 
+        initialRole={getSubdomainRole() || 'citizen'}
         onLoginSuccess={(tokenVal, roleVal, usernameVal, nameVal) => {
           const uRole = roleVal as UserRole;
           localStorage.setItem('token', tokenVal);
@@ -857,27 +856,27 @@ export default function App() {
                 onClick={() => setActiveTab('citizen_portal')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'citizen_portal' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Home size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Dashboard</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.dashboard')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   setActiveTab('citizen_portal');
-                  showToast("Use the 'Write Complaint Form' tab to submit manual reports.", 'info');
+                  showToast(t('citizen.write_complaint'), 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <Radio size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Report an Issue</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.report_issue')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   setActiveTab('citizen_portal');
-                  showToast("Active complaints are tracked in the verification registry.", 'info');
+                  showToast(t('citizen.my_complaints_title'), 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <Layers size={16} />
-                <span style={{ fontSize: '0.8rem' }}>My Complaints</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.my_complaints')}</span>
               </button>
 
               <button className="secondary" 
@@ -886,17 +885,17 @@ export default function App() {
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <CheckCircle size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Track & Verify</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.track_verify')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   const myUnresolved = incidents.filter(i => (i.reporter_name === fullName || i.reporter_name === username) && i.status !== 'resolved' && i.status !== 'completed' && i.status !== 'resolved_confirmed');
-                  showToast(`You have ${myUnresolved.length} active grievance tracking logs.`, 'info');
+                  showToast(`${t('notifications.title')}: ${myUnresolved.length} ${t('citizen.active_complaints')}`, 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none', position: 'relative' }}>
                 <Radio size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Notifications</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('notifications.title')}</span>
                 {incidents.filter(i => (i.reporter_name === fullName || i.reporter_name === username) && i.status !== 'resolved' && i.status !== 'completed' && i.status !== 'resolved_confirmed').length > 0 && (
                   <span style={{ position: 'absolute', right: '12px', background: '#ef4444', color: '#fff', fontSize: '0.65rem', padding: '1px 6px', borderRadius: '10px' }}>
                     {incidents.filter(i => (i.reporter_name === fullName || i.reporter_name === username) && i.status !== 'resolved' && i.status !== 'completed' && i.status !== 'resolved_confirmed').length}
@@ -908,14 +907,14 @@ export default function App() {
                 onClick={() => setActiveTab('profile')}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <UserCheck size={16} />
-                <span style={{ fontSize: '0.8rem' }}>My Profile</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('profile')}</span>
               </button>
 
               <button className="secondary" 
-                onClick={() => showToast("Dial 1800-212-GRAMX for immediate support.", 'info')}
+                onClick={() => showToast(`${t('helpline.title')}: ${t('helpline.number')}`, 'info')}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <HelpCircle size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Help & Support</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('helpline.title')}</span>
               </button>
 
               {/* Call Toll-free Widget */}
@@ -928,8 +927,8 @@ export default function App() {
                 fontSize: '0.75rem',
                 color: 'var(--text-secondary)'
               }}>
-                <span style={{ display: 'block', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>📞 Call Toll-free</span>
-                <strong style={{ color: 'var(--accent-primary)', fontSize: '0.8rem' }}>1800-212-GRAMX</strong>
+                <span style={{ display: 'block', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>📞 {t('helpline.title')}</span>
+                <strong style={{ color: 'var(--accent-primary)', fontSize: '0.8rem' }}>{t('helpline.number')}</strong>
               </div>
             </>
           )}
@@ -941,54 +940,54 @@ export default function App() {
                 onClick={() => setActiveTab('worker_portal')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'worker_portal' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Home size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Dashboard</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.dashboard')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   setActiveTab('worker_portal');
-                  showToast("You have 1 active task dispatch assignment.", 'info');
+                  showToast(t('worker.today_work'), 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <Layers size={16} />
-                <span style={{ fontSize: '0.8rem' }}>My Tasks</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.my_tasks')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => setActiveTab('worker_portal')}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <Wrench size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Current Assignment</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.current_assignment')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   setActiveTab('worker_portal');
-                  showToast("GPS navigation centered on active task coordinates.", 'info');
+                  showToast(t('nav.gps_navigation'), 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <MapIcon size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Navigation</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.gps_navigation')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   const completedTasks = workerTasks.filter(t => t.status === 'completed');
-                  showToast(`Past completions: ${completedTasks.length} tasks completed. Last payout TXID: ${completedTasks[0]?.payout_tx_id || 'None'}`, 'info');
+                  showToast(`${t('nav.work_history')}: ${completedTasks.length} ${t('worker.completed')}`, 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <ShieldCheck size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Work History</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.work_history')}</span>
               </button>
 
               <button className="secondary" 
                 onClick={() => {
                   const earnings = workerTasks.filter(t => t.status === 'completed').reduce((acc, t) => acc + t.cost, 0);
-                  showToast(`Total Earnings: ₹${earnings.toLocaleString()} disbursed to wallet.`, 'info');
+                  showToast(`${t('nav.my_earnings')}: ₹${earnings.toLocaleString()}`, 'info');
                 }}
                 style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }}>
                 <BarChart size={16} />
-                <span style={{ fontSize: '0.8rem' }}>My Earnings</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.my_earnings')}</span>
               </button>
 
               {/* Status Widget */}
@@ -1001,13 +1000,13 @@ export default function App() {
                 fontSize: '0.75rem',
                 color: 'var(--text-secondary)'
               }}>
-                <span style={{ display: 'block', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>My Status</span>
+                <span style={{ display: 'block', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{t('worker.payout_status')}</span>
                 <span className="badge badge-low" style={{ marginBottom: '8px', display: 'inline-flex' }}>
                   {workerTasks.find(t => t.status !== 'completed') ? 'ON TASK' : 'AVAILABLE'}
                 </span>
                 <p style={{ fontSize: '0.65rem', marginBottom: '8px' }}>USER ID: <strong>{username.toUpperCase()}</strong></p>
-                <button className="secondary" style={{ padding: '4px 8px', fontSize: '0.65rem', width: '100%', borderColor: '#ef4444', color: '#fca5a5' }} onClick={() => showToast("Offline status synced", "info")}>
-                  Go Offline
+                <button className="secondary" style={{ padding: '4px 8px', fontSize: '0.65rem', width: '100%', borderColor: '#ef4444', color: '#fca5a5' }} onClick={() => showToast(t('common.offline'), 'info')}>
+                  {t('sign_out')}
                 </button>
               </div>
             </>
@@ -1020,84 +1019,84 @@ export default function App() {
                 onClick={() => setActiveTab('village_dashboard')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'village_dashboard' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Home size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Dashboard</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.dashboard')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'ground_reality' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('ground_reality')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'ground_reality' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Activity size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Alert Registry</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.ground_reality')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'gis_map' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('gis_map')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'gis_map' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <MapIcon size={16} />
-                <span style={{ fontSize: '0.8rem' }}>GIS Operations Map</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.gis_map')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'incidents' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('incidents')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'incidents' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <ShieldAlert size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Problem Diagnosis</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.incidents')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'prediction_future' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('prediction_future')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'prediction_future' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Compass size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Smart Dispatch Desk</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.smart_dispatch')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'money_budget' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('money_budget')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'money_budget' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <BarChart size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Budget & Treasury</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.budget_treasury')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'asset_intel' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('asset_intel')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'asset_intel' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Cpu size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Asset Intelligence</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.asset_health')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'resource_opt' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('resource_opt')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'resource_opt' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Landmark size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Resource Intelligence</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.resource_opt')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'project_intel' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('project_intel')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'project_intel' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Layers size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Project Verification</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.project_audit')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'data_intelligence' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('data_intelligence')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'data_intelligence' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Database size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Data Quality CC</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.data_intelligence')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'responsible_ai' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('responsible_ai')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'responsible_ai' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Scale size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Responsible AI</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.responsible_ai')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'crisis_intelligence' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('crisis_intelligence')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'crisis_intelligence' ? 'var(--accent-primary)' : 'transparent', border: 'none', color: 'var(--status-critical)' }}>
                 <ShieldAlert size={16} />
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Crisis Command</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{t('nav.crisis_command')}</span>
               </button>
             </>
           )}
@@ -1109,42 +1108,42 @@ export default function App() {
                 onClick={() => setActiveTab('command_center')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'command_center' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Home size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Dashboard</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.dashboard')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'village_dashboard' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('village_dashboard')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'village_dashboard' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Activity size={16} />
-                <span style={{ fontSize: '0.8rem' }}>District Overview</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('collector.district_overview')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'gis_map' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('gis_map')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'gis_map' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <MapIcon size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Panchayat Performance</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.gis_map')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'ground_reality' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('ground_reality')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'ground_reality' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <ActivityIcon size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Critical Cases</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.ground_reality')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'equity_intel' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('equity_intel')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'equity_intel' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <Heart size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Infrastructure Health</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('collector.inter_village_equity')}</span>
               </button>
 
               <button className={`secondary ${activeTab === 'audit_accountability' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('audit_accountability')}
                 style={{ justifyContent: 'flex-start', background: activeTab === 'audit_accountability' ? 'var(--accent-primary)' : 'transparent', border: 'none' }}>
                 <ShieldCheck size={16} />
-                <span style={{ fontSize: '0.8rem' }}>Budget Overview</span>
+                <span style={{ fontSize: '0.8rem' }}>{t('nav.audit_ledger')}</span>
               </button>
             </>
           )}
@@ -1169,7 +1168,7 @@ export default function App() {
             gap: '8px'
           }}
         >
-          <span>🚪</span> Sign Out
+          <span>🚪</span> {t('sign_out')}
         </button>
 
         {/* Sidebar Quick Links + External Links */}
@@ -1200,11 +1199,11 @@ export default function App() {
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>GRAM-X</span>
-                  <span style={{ fontSize: '0.6rem', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Gov-Intell Platform</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>{t('brand.title')}</span>
+                  <span style={{ fontSize: '0.6rem', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>{t('brand.badge')}</span>
                 </div>
-                <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0 0 0', fontWeight: 'semibold' }}>
-                  Grassroots Resource, Action & Intelligence Network • Digital Rural Governance Platform
+                <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0 0 0', fontWeight: 600 }}>
+                  {t('brand.subtitle')}
                 </p>
               </div>
             </div>
@@ -1232,14 +1231,14 @@ export default function App() {
                 aria-label="Open Command Palette Search (Ctrl+K)"
               >
                 <span aria-hidden="true">🔍</span>
-                <span className="header-search-text">Search</span>
-                <kbd style={{ fontSize: '0.65rem', background: '#e2e8f0', color: '#334155', padding: '1px 5px', borderRadius: '4px', border: '1px solid #cbd5e1' }} className="header-search-kbd">Ctrl K</kbd>
+                <span className="header-search-text">{t('action.search')}</span>
+                <kbd style={{ fontSize: '0.65rem', background: '#e2e8f0', color: '#334155', padding: '1px 5px', borderRadius: '4px', border: '1px solid #cbd5e1' }} className="header-search-kbd">{t('search.shortcut')}</kbd>
               </button>
 
               {/* System Operational Badge — hidden on narrow screens */}
               <div className="header-status-badge" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', background: '#ecfdf5', padding: '4px 10px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} aria-hidden="true"></span>
-                <span>System Operational</span>
+                <span>{t('system.operational')}</span>
               </div>
 
               {/* Network Status Indicator */}
@@ -1253,13 +1252,12 @@ export default function App() {
               {/* Native 4-Language Selector (Hindi, Tamil, Telugu, English) */}
               <LanguageSelector variant="compact" />
 
-
               {/* Dynamic Database-driven Notification Bell */}
               <div style={{ position: 'relative' }}>
                 <button 
                   onClick={() => setIsNotificationDrawerOpen(true)}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', position: 'relative' }}
-                  aria-label={`Notifications — ${incidents.filter(i => i.status !== 'resolved' && i.status !== 'completed' && i.status !== 'resolved_confirmed').length} active`}
+                  aria-label={`${t('notifications.title')} — ${incidents.filter(i => i.status !== 'resolved' && i.status !== 'completed' && i.status !== 'resolved_confirmed').length} active`}
                 >
                   <span
                     style={{ fontSize: '1.2rem', display: 'inline-block' }}
@@ -1280,9 +1278,9 @@ export default function App() {
                   {getInitials(fullName || role || 'U')}
                 </div>
                 <div className="header-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#0f172a', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>{fullName || 'Administrator'}</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#0f172a', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>{fullName || t('greeting.welcome_back')}</span>
                   <span style={{ fontSize: '0.6rem', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {role === 'admin' ? 'Panchayat Sec.' : role === 'district' ? 'Collector' : role.toUpperCase()}
+                    {role === 'admin' ? t('role.admin') : role === 'district' ? t('role.district') : role === 'citizen' ? t('role.citizen') : t('role.worker')}
                   </span>
                 </div>
               </div>
@@ -1292,7 +1290,7 @@ export default function App() {
                 onClick={() => { setActiveTab('profile'); setShowNotifications(false); }}
                 style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', borderRadius: '6px', fontWeight: 'bold', color: '#334155' }}
               >
-                Profile
+                {t('profile')}
               </button>
 
             </div>
@@ -2031,15 +2029,15 @@ export default function App() {
               assets={assets}
               technicians={technicians}
               tasks={allTasks}
-              onDispatch={async (incId, techId) => {
+              onDispatch={async (incId: number, techId: number) => {
                 await api.dispatchWorker(incId, techId);
                 loadVillageData(selectedVillageId);
               }}
-              onSelectIncident={(id) => {
+              onSelectIncident={(id: number) => {
                 setSelectedIncidentId(id);
                 setActiveTab('incident_detail');
               }}
-              onNavigateTab={(tab) => setActiveTab(tab as any)}
+              onNavigateTab={(tab: string) => setActiveTab(tab as any)}
               showToast={showToast}
               onRefresh={() => loadVillageData(selectedVillageId)}
             />
@@ -2049,11 +2047,11 @@ export default function App() {
               villages={villages}
               incidents={incidents}
               tasks={allTasks}
-              onSelectVillage={(vid) => {
+              onSelectVillage={(vid: number) => {
                 setSelectedVillageId(vid);
                 setActiveTab('village_dashboard');
               }}
-              onSelectIncident={(incId) => {
+              onSelectIncident={(incId: number) => {
                 setSelectedIncidentId(incId);
                 setActiveTab('incident_detail');
               }}
@@ -2062,14 +2060,27 @@ export default function App() {
               districtName="Raisen"
             />
           )}
-          {activeTab === 'blackrock_login' && (
-            <BlackRockIndiaLogin />
-          )}
-          {activeTab === 'blackrock_auth' && (
-            <BlackRockIndiaAuth />
+          {(activeTab === 'blackrock_login' || activeTab === 'blackrock_auth') && (
+            <GovAuthPortal 
+              onLoginSuccess={(tokenVal, roleVal, usernameVal, nameVal) => {
+                const uRole = roleVal as UserRole;
+                localStorage.setItem('token', tokenVal);
+                localStorage.setItem('role', roleVal);
+                localStorage.setItem('username', usernameVal);
+                localStorage.setItem('fullName', nameVal);
+                setToken(tokenVal);
+                setRole(uRole);
+                setUsername(usernameVal);
+                setFullName(nameVal);
+                setActiveTab(getInitialTabForRole(uRole));
+                setAuthStatus('AUTHENTICATED');
+                showToast(`Welcome back, ${nameVal}!`, 'success');
+              }}
+              onBackToHome={() => setActiveTab('command_center')}
+            />
           )}
           {activeTab === 'portal_first_page' && (
-            <PortalFirstPage onLoginClick={() => setActiveTab('blackrock_login')} />
+            <PortalFirstPage onLoginClick={() => setShowLanding(false)} />
           )}
           {activeTab === 'esg_overview' && (
             <ESGOverview />
@@ -2119,32 +2130,32 @@ export default function App() {
 
           {/* 19. PROFILE TAB */}
           {activeTab === 'profile' && (
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '16px', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>OFFICIAL ADMINISTRATIVE PROFILE</h2>
-                <p style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', margin: '4px 0 0 0' }}>Security cleared ID credentials</p>
+            <div className="bg-white border border-slate-200/90 p-6 sm:p-8 rounded-2xl shadow-xs max-w-xl mx-auto space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{t('profile')}</h2>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">{t('official_notice')}</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', fontSize: '0.85rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #f8fafc' }}>
-                  <span style={{ color: '#64748b', fontWeight: 'bold' }}>FULL LEGAL NAME:</span>
-                  <strong style={{ color: '#0f172a' }}>{fullName || 'Administrator'}</strong>
+              <div className="space-y-3 text-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-slate-50 rounded-xl">
+                  <span className="text-slate-500 font-semibold text-xs sm:text-sm">Legal Full Name:</span>
+                  <strong className="text-slate-900 font-bold">{fullName || t('greeting.welcome_back')}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #f8fafc' }}>
-                  <span style={{ color: '#64748b', fontWeight: 'bold' }}>USER IDENTIFIER:</span>
-                  <strong style={{ color: '#0f172a' }}>{username || 'N/A'}</strong>
+                <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-slate-50 rounded-xl">
+                  <span className="text-slate-500 font-semibold text-xs sm:text-sm">User Identifier:</span>
+                  <strong className="text-slate-900 font-mono font-bold">{username || 'N/A'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #f8fafc' }}>
-                  <span style={{ color: '#64748b', fontWeight: 'bold' }}>PORTAL ACCESS ROLE:</span>
-                  <strong style={{ color: '#0f172a' }}>{role ? role.toUpperCase() : 'N/A'}</strong>
+                <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-slate-50 rounded-xl">
+                  <span className="text-slate-500 font-semibold text-xs sm:text-sm">Portal Access Authority:</span>
+                  <strong className="text-blue-700 font-bold uppercase">{role === 'admin' ? t('role.admin') : role === 'district' ? t('role.district') : role === 'citizen' ? t('role.citizen') : t('role.worker')}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #f8fafc' }}>
-                  <span style={{ color: '#64748b', fontWeight: 'bold' }}>ACCOUNT SECURITY STATUS:</span>
-                  <strong style={{ color: '#10b981' }}>✓ VERIFIED OPERATIONS</strong>
+                <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+                  <span className="text-emerald-700 font-semibold text-xs sm:text-sm">Account Status:</span>
+                  <strong className="text-emerald-800 font-bold">✓ {t('system.operational')}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px' }}>
-                  <span style={{ color: '#64748b', fontWeight: 'bold' }}>VILLAGE ASSIGNMENT:</span>
-                  <strong style={{ color: '#0f172a' }}>{villages.find(v => v.id === selectedVillageId)?.name || 'Piparli'} Panchayat (ID: #{selectedVillageId})</strong>
+                <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-slate-50 rounded-xl">
+                  <span className="text-slate-500 font-semibold text-xs sm:text-sm">Assigned Gram Panchayat:</span>
+                  <strong className="text-slate-900 font-bold">{villages.find(v => v.id === selectedVillageId)?.name || 'Piparli'} Panchayat (#{selectedVillageId})</strong>
                 </div>
               </div>
             </div>

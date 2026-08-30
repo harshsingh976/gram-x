@@ -1,4 +1,4 @@
-﻿export const en: Record<string, string> = {
+export const en: Record<string, string> = {
   // ─── Header & Brand ──────────────────────────────
   "brand.title": "GRAM-X",
   "brand.subtitle": "Grassroots Resource, Action & Intelligence Network • Digital Rural Governance Platform",
@@ -370,5 +370,70 @@
   "notifications.filter.all": "All",
   "notifications.filter.urgent": "Urgent & SLA",
   "notifications.filter.tasks": "Tasks",
-  "notifications.view_details": "View details"
+  "notifications.view_details": "View details",
+
+  // ─── Dynamic Greetings & Headers ──────────────────────────
+  "greeting.welcome_back": "Welcome back",
+  "greeting.good_morning": "Good morning",
+  "greeting.good_afternoon": "Good afternoon",
+  "greeting.good_evening": "Good evening",
+
+  // ─── Citizen Portal Strings ──────────────────────────────
+  "citizen.overview": "Citizen Grievance Overview",
+  "citizen.active_complaints": "Active Grievances",
+  "citizen.resolved_complaints": "Resolved Grievances",
+  "citizen.recent_activity": "Recent Grievance Activity",
+  "citizen.create_new": "File New Grievance",
+  "citizen.write_complaint": "Grievance Filing Form",
+  "citizen.problem_title": "Issue Title / Summary",
+  "citizen.problem_title_ph": "e.g. Water line leak in Ward 4 or streetlight down",
+  "citizen.category": "Department / Infrastructure Category",
+  "citizen.description": "Detailed Description & Landmark",
+  "citizen.description_ph": "Describe what is broken, nearest landmark, and how many households are affected...",
+  "citizen.evidence_photo": "Photographic Evidence (Optional)",
+  "citizen.upload_photo": "Upload Photo from Device",
+  "citizen.no_complaints_title": "No Grievances Filed Yet",
+  "citizen.no_complaints_desc": "You have not submitted any complaints yet. Report public infrastructure issues to get them fixed.",
+  "citizen.my_complaints_title": "My Registered Grievances",
+  "citizen.verified_success": "Resolution Verified by Citizen",
+  "citizen.feedback_prompt": "Rate the repair quality and turnaround time",
+
+  // ─── Field Worker Portal Strings ──────────────────────────
+  "worker.today_work": "Today's Work Queue",
+  "worker.assigned": "Assigned Tasks",
+  "worker.completed": "Completed Repairs",
+  "worker.no_tasks_title": "You're All Caught Up",
+  "worker.no_tasks_desc": "No pending task assignments at the moment. New dispatches from Panchayat will appear here.",
+  "worker.accept_task": "Accept Task Dispatch",
+  "worker.upload_evidence": "Upload Repair Proof",
+  "worker.request_price_increase": "Request Cost Revision",
+  "worker.base_payout": "Base Standard Payout",
+  "worker.requested_extra": "Additional Cost Requested",
+  "worker.justification": "Scope Revision Justification",
+  "worker.payout_status": "Disbursement Status",
+  "worker.paid": "Disbursed",
+  "worker.pending": "Under Review",
+
+  // ─── Admin & Governance Strings ──────────────────────────
+  "admin.overview": "Panchayat Governance Command",
+  "admin.total_complaints": "Total Grievances",
+  "admin.open_cases": "Open Cases",
+  "admin.resolved_cases": "Resolved Cases",
+  "admin.resolution_rate": "Resolution Rate",
+  "admin.dispatch_worker": "Dispatch Field Worker",
+  "admin.ai_triage": "AI Triage & Defect Assessment",
+  "admin.tamper_evident_chain": "Cryptographic SHA-256 Audit Trail",
+
+  // ─── Collector Portal Strings ────────────────────────────
+  "collector.district_overview": "District Magistrate Oversight",
+  "collector.inter_village_equity": "Inter-Village Infrastructure Equity",
+  "collector.crisis_intelligence": "Crisis & Anomaly Intelligence",
+
+  // ─── Connectivity & Common ───────────────────────────────
+  "common.toll_free": "National Citizen Helpline (Toll-Free)",
+  "common.emergency_contact": "1800-180-1555",
+  "common.back_online": "Back online. Live synchronization restored.",
+  "common.offline": "You are currently offline. Synchronizing cached records.",
+  "common.try_again": "Try Again",
+  "common.learn_more": "Learn More"
 };

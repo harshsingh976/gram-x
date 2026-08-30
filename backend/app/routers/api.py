@@ -192,7 +192,6 @@ def signup_user(req: SignupRequest, db: Session = Depends(get_db)):
         if assigned_role == "worker":
             tech = Technician(
                 user_id=new_user.id,
-                name=new_user.name,
                 specialty="General Repairs",
                 availability=True,
                 current_lat=23.3,

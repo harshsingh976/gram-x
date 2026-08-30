@@ -107,22 +107,17 @@ def verify_and_rotate_refresh_token(raw_token: str, db: Session) -> tuple[User, 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Could not validate credentials. Please log in with a valid session.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     if not token:
-        from app.config import APP_MODE
-        if APP_MODE != "production":
-            # For simplicity in demo mode, if no token is provided, fallback to admin user
-            admin_user = db.query(User).filter(User.username == "admin").first()
-            if admin_user:
-                return admin_user
         raise credentials_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        if username is None:
+        token_type: str = payload.get("type", "access")
+        if username is None or token_type != "access":
             raise credentials_exception
     except JWTError:
         raise credentials_exception
