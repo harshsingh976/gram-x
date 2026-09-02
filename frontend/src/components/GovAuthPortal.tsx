@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import * as api from '../api';
 import type { UserRole } from '../types';
+import { useLanguage } from '../i18n';
 
 export interface GovAuthPortalProps {
   onLoginSuccess: (token: string, role: UserRole, username: string, name: string) => void;
@@ -18,6 +19,7 @@ export default function GovAuthPortal({
   onBackToHome,
   initialRole = 'citizen' 
 }: GovAuthPortalProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -103,6 +105,38 @@ export default function GovAuthPortal({
       } else {
         setErrorMessage(msg || 'Authentication failed. Please verify your credentials and try again.');
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuickLogin = async (user: string, pass: string) => {
+    setUsername(user);
+    setPassword(pass);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setFieldErrors({});
+    setIsLoading(true);
+    try {
+      const data = await api.login(user, pass);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('token', data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh_token);
+        }
+      }
+      const me = await api.getMe();
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('role', me.role);
+        localStorage.setItem('username', me.username);
+        localStorage.setItem('fullName', me.name);
+      }
+      setSuccessMessage(`Logged in as ${me.name || me.username} (${me.role.toUpperCase()})`);
+      setTimeout(() => {
+        onLoginSuccess(data.access_token, me.role as UserRole, me.username, me.name);
+      }, 250);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Quick login failed. Please verify the credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -348,13 +382,60 @@ export default function GovAuthPortal({
             )}
 
             {activeTab === 'login' && (
-              <form 
-                id="panel-login"
-                role="tabpanel"
-                aria-labelledby="tab-login"
-                onSubmit={handleLoginSubmit} 
-                className="space-y-4"
-              >
+              <>
+                {/* 1-Click Quick Demo Credentials Panel */}
+                <div className="mb-4 p-3 bg-slate-900/90 border border-slate-800 rounded-xl">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Quick Demo Authority Access</span>
+                    <span className="text-[10px] text-emerald-400 font-semibold">1-Click Sign In</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('citizen', 'password123')}
+                      className="p-2 text-left bg-slate-950/80 hover:bg-blue-950/60 border border-slate-800/80 hover:border-blue-700/60 rounded-lg transition-all"
+                    >
+                      <div className="text-xs font-bold text-slate-200">🇮🇳 {t('role.citizen')}</div>
+                      <div className="text-[10px] text-slate-400">citizen / password123</div>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('worker', 'password123')}
+                      className="p-2 text-left bg-slate-950/80 hover:bg-emerald-950/60 border border-slate-800/80 hover:border-emerald-700/60 rounded-lg transition-all"
+                    >
+                      <div className="text-xs font-bold text-slate-200">🔧 {t('role.worker')}</div>
+                      <div className="text-[10px] text-slate-400">worker / password123</div>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('admin', 'admin123')}
+                      className="p-2 text-left bg-slate-950/80 hover:bg-indigo-950/60 border border-slate-800/80 hover:border-indigo-700/60 rounded-lg transition-all"
+                    >
+                      <div className="text-xs font-bold text-slate-200">🏛️ {t('role.admin')}</div>
+                      <div className="text-[10px] text-slate-400">admin / admin123</div>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('district', 'district123')}
+                      className="p-2 text-left bg-slate-950/80 hover:bg-purple-950/60 border border-slate-800/80 hover:border-purple-700/60 rounded-lg transition-all"
+                    >
+                      <div className="text-xs font-bold text-slate-200">🛡️ {t('role.district')}</div>
+                      <div className="text-[10px] text-slate-400">district / district123</div>
+                    </button>
+                  </div>
+                </div>
+
+                <form 
+                  id="panel-login"
+                  role="tabpanel"
+                  aria-labelledby="tab-login"
+                  onSubmit={handleLoginSubmit} 
+                  className="space-y-4"
+                >
                 <div>
                   <label htmlFor="login-username" className="block text-xs sm:text-sm font-semibold text-slate-300 mb-1.5">
                     User ID or Email <span className="text-red-400">*</span>
@@ -451,6 +532,7 @@ export default function GovAuthPortal({
                   )}
                 </button>
               </form>
+              </>
             )}
 
             {activeTab === 'register' && (

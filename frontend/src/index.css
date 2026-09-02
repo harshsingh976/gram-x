@@ -2836,6 +2836,19 @@ img[src=""], img:not([src]) { visibility: hidden; }
   .auth-input, .form-control {
     min-height: 44px;
   }
+
+  /* Prevent grid overlap on 320px-480px */
+  .grid-responsive-auto,
+  .wp-kpi-grid,
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .main-content {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    overflow-x: hidden !important;
+  }
 }
 
 /* ─── ACCESSIBILITY: REDUCED MOTION ────────────────────────── */
@@ -2846,5 +2859,19 @@ img[src=""], img:not([src]) { visibility: hidden; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ─── Z-INDEX ANTI-CLASH SYSTEM ───────────────────────────── */
+.gov-header-bar {
+  z-index: var(--z-header) !important;
+}
+.dropdown-menu, .language-selector-dropdown {
+  z-index: var(--z-dropdown) !important;
+}
+.sidebar-drawer {
+  z-index: var(--z-sidebar) !important;
+}
+.notification-drawer {
+  z-index: var(--z-notify) !important;
 }
 
