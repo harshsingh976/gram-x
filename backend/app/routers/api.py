@@ -627,8 +627,16 @@ def get_asset_detail(id: int, db: Session = Depends(get_db)):
 # ----------------- INCIDENTS & CITIZEN REPORTS -----------------
 @api_router.get("/incidents", response_model=List[IncidentResponse])
 def get_incidents(
+    response: Response,
     village_id: Optional[int] = None,
     status: Optional[str] = None,
+    category: Optional[str] = None,
+    severity: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -643,8 +651,42 @@ def get_incidents(
             query = query.filter(Incident.status == "escalated")
         else:
             query = query.filter(Incident.status == status)
-            
-    incidents = query.all()
+
+    if category:
+        query = query.filter(Incident.category == category)
+
+    if severity:
+        query = query.filter(Incident.severity == severity)
+
+    if search:
+        search_pattern = f"%{search.strip()}%"
+        query = query.filter(
+            (Incident.title.ilike(search_pattern)) | 
+            (Incident.description.ilike(search_pattern)) |
+            (Incident.public_reference.ilike(search_pattern))
+        )
+
+    # Total count for pagination metadata
+    total_count = query.count()
+    total_pages = max(1, math.ceil(total_count / limit))
+
+    # Apply sorting
+    sort_col = getattr(Incident, sort_by, Incident.created_at)
+    if sort_order.lower() == "asc":
+        query = query.order_by(sort_col.asc())
+    else:
+        query = query.order_by(sort_col.desc())
+
+    # Apply pagination slice
+    offset = (page - 1) * limit
+    incidents = query.offset(offset).limit(limit).all()
+
+    # Set response pagination headers
+    response.headers["X-Total-Count"] = str(total_count)
+    response.headers["X-Page"] = str(page)
+    response.headers["X-Total-Pages"] = str(total_pages)
+    response.headers["X-Limit"] = str(limit)
+
     from app.services.sla_utils import calculate_incident_sla
     
     resps = []
@@ -675,6 +717,99 @@ def get_incidents(
             "sla_status": sla["sla_status"]
         })
     return resps
+
+# ----------------- REAL GEOSPATIAL GIS BOUNDS API -----------------
+@api_router.get("/gis/features")
+def get_gis_features(
+    min_lat: float = Query(..., description="Southwest Latitude"),
+    min_lng: float = Query(..., description="Southwest Longitude"),
+    max_lat: float = Query(..., description="Northeast Latitude"),
+    max_lng: float = Query(..., description="Northeast Longitude"),
+    layers: Optional[str] = Query("all", description="Comma separated layers: assets,incidents,workers"),
+    limit: int = Query(250, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    High-scale spatial query returning geocoded features strictly bounded by current viewport.
+    Protects client memory from downloading all global features.
+    """
+    active_layers = [l.strip().lower() for l in (layers.split(",") if layers != "all" else ["assets", "incidents", "workers"])]
+    features = {
+        "type": "FeatureCollection",
+        "bbox": [min_lng, min_lat, max_lng, max_lat],
+        "assets": [],
+        "incidents": [],
+        "workers": []
+    }
+
+    # 1. Geocoded Assets inside bounding box
+    if "assets" in active_layers or "all" in active_layers:
+        asset_query = db.query(Asset).filter(
+            Asset.latitude >= min_lat,
+            Asset.latitude <= max_lat,
+            Asset.longitude >= min_lng,
+            Asset.longitude <= max_lng
+        ).limit(limit).all()
+
+        for a in asset_query:
+            features["assets"].append({
+                "id": a.id,
+                "name": a.name,
+                "type": a.type,
+                "status": a.status,
+                "village_id": a.village_id,
+                "latitude": a.latitude,
+                "longitude": a.longitude,
+                "utilization": a.current_utilization,
+                "capacity": a.capacity
+            })
+
+    # 2. Geocoded Active Incidents inside bounding box
+    if "incidents" in active_layers or "all" in active_layers:
+        inc_query = db.query(Incident).filter(
+            Incident.latitude >= min_lat,
+            Incident.latitude <= max_lat,
+            Incident.longitude >= min_lng,
+            Incident.longitude <= max_lng,
+            Incident.status != "resolved"
+        ).limit(limit).all()
+
+        for inc in inc_query:
+            features["incidents"].append({
+                "id": inc.id,
+                "title": inc.title,
+                "category": inc.category,
+                "status": inc.status,
+                "severity": inc.severity,
+                "priority_score": inc.priority_score,
+                "latitude": inc.latitude,
+                "longitude": inc.longitude,
+                "created_at": inc.created_at.isoformat() if inc.created_at else None,
+                "public_reference": inc.public_reference
+            })
+
+    # 3. Available / En-route Technicians inside bounding box
+    if ("workers" in active_layers or "all" in active_layers) and current_user.role in ["admin", "district", "worker", "super_admin"]:
+        tech_query = db.query(Technician).filter(
+            Technician.current_lat >= min_lat,
+            Technician.current_lat <= max_lat,
+            Technician.current_lng >= min_lng,
+            Technician.current_lng <= max_lng
+        ).limit(50).all()
+
+        for t in tech_query:
+            features["workers"].append({
+                "id": t.id,
+                "user_id": t.user_id,
+                "specialty": t.specialty,
+                "availability": t.availability,
+                "rating": t.rating,
+                "latitude": t.current_lat,
+                "longitude": t.current_lng
+            })
+
+    return features
 
 @api_router.post("/incidents/report", response_model=IncidentResponse)
 def report_incident(req: IncidentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

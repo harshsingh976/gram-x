@@ -260,6 +260,64 @@ export async function fetchIncidents(villageId?: number) {
   return res.json();
 }
 
+export async function fetchIncidentsPaginated(params: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  status?: string;
+  severity?: string;
+  search?: string;
+  village_id?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}) {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.limit) query.set('limit', String(params.limit));
+  if (params.category) query.set('category', params.category);
+  if (params.status) query.set('status', params.status);
+  if (params.severity) query.set('severity', params.severity);
+  if (params.search) query.set('search', params.search);
+  if (params.village_id) query.set('village_id', String(params.village_id));
+  if (params.sort_by) query.set('sort_by', params.sort_by);
+  if (params.sort_order) query.set('sort_order', params.sort_order);
+
+  const res = await fetch(`${API_BASE}/incidents?${query.toString()}`, { headers: getHeaders() });
+  const data = await res.json();
+  const totalCount = parseInt(res.headers.get('X-Total-Count') || '0', 10);
+  const totalPages = parseInt(res.headers.get('X-Total-Pages') || '1', 10);
+  const currentPage = parseInt(res.headers.get('X-Page') || '1', 10);
+
+  return {
+    items: data,
+    totalCount: isNaN(totalCount) ? data.length : totalCount,
+    totalPages: isNaN(totalPages) ? 1 : totalPages,
+    currentPage: isNaN(currentPage) ? 1 : currentPage,
+  };
+}
+
+export async function fetchGisFeatures(params: {
+  min_lat: number;
+  min_lng: number;
+  max_lat: number;
+  max_lng: number;
+  layers?: string;
+  limit?: number;
+}) {
+  const query = new URLSearchParams({
+    min_lat: String(params.min_lat),
+    min_lng: String(params.min_lng),
+    max_lat: String(params.max_lat),
+    max_lng: String(params.max_lng),
+    layers: params.layers || 'all',
+    limit: String(params.limit || 250)
+  });
+
+  const res = await fetch(`${API_BASE}/gis/features?${query.toString()}`, { headers: getHeaders() });
+  if (!res.ok) throw new Error('Failed to fetch GIS features');
+  return res.json();
+}
+
 export async function fetchIncidentDetail(id: number) {
   const res = await fetch(`${API_BASE}/incidents/${id}`, { headers: getHeaders() });
   return res.json();

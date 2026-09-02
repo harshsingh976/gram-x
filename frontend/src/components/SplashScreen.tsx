@@ -1,245 +1,246 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Activity, Power } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function SplashScreen({ onComplete }: { onComplete: () => void }) {
-  const [isBursting, setIsBursting] = useState(false);
-  const [fadeAway, setFadeAway] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+interface SplashScreenProps {
+  onComplete: () => void;
+  isInitialized?: boolean;
+}
 
-  // Particle list for canvas animation
-  const particles = useRef<any[]>([]);
-  const backgroundParticles = useRef<any[]>([]);
+const CIVIC_TICKER_MESSAGES = [
+  'Track public-service requests in real time',
+  'AI suggestions remain subject to official review',
+  'Available in English, हिन्दी, தமிழ் and తెలుగు',
+  'Secure, accountable rural governance',
+  'Real-Time Spatial Bounding-Box GIS Live',
+];
 
+export default function SplashScreen({ onComplete, isInitialized = true }: SplashScreenProps) {
+  const [fading, setFading] = useState(false);
+  const [tickerIndex, setTickerIndex] = useState(0);
+
+  // Rotate ticker messages smoothly
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // Create background drifting star motes
-    backgroundParticles.current = Array.from({ length: 80 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 1.5 + 0.5,
-      speedX: (Math.random() - 0.5) * 0.15,
-      speedY: (Math.random() - 0.5) * 0.15,
-      opacity: Math.random() * 0.5 + 0.2
-    }));
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. Draw drifting background particles
-      backgroundParticles.current.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
-        ctx.fill();
-
-        p.x += p.speedX;
-        p.y += p.speedY;
-
-        // Wrap around boundaries
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-      });
-
-      // 2. Draw burst explosion particles if active
-      if (particles.current.length > 0) {
-        particles.current.forEach((p, index) => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.shadowBlur = p.glow;
-          ctx.shadowColor = p.color;
-          ctx.fill();
-          ctx.shadowBlur = 0; // reset glow
-
-          // Move particles
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += p.gravity;
-          p.size *= 0.98; // shrink
-          p.alpha -= 0.015;
-
-          if (p.alpha <= 0 || p.size <= 0.2) {
-            particles.current.splice(index, 1);
-          }
-        });
-      }
-
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(animationFrameId);
-    };
+    const interval = setInterval(() => {
+      setTickerIndex((prev) => (prev + 1) % CIVIC_TICKER_MESSAGES.length);
+    }, 2400);
+    return () => clearInterval(interval);
   }, []);
 
-  // Trigger the burst explosion
-  const handleEnterPortal = () => {
-    if (isBursting) return;
-    setIsBursting(true);
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    const colors = [
-      'rgba(99, 102, 241, 0.95)', // Indigo
-      'rgba(20, 184, 166, 0.95)',  // Teal
-      'rgba(168, 85, 247, 0.95)',  // Purple
-      'rgba(255, 255, 255, 0.95)'   // White
-    ];
-
-    // Instantiate 160 high-velocity explosion particles
-    particles.current = Array.from({ length: 160 }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 12 + 4;
-      return {
-        x: centerX,
-        y: centerY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: Math.random() * 4 + 1.5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: 1.0,
-        gravity: 0.05,
-        glow: Math.random() * 15 + 5
-      };
-    });
-
-    // Fade out splash layout and trigger complete callback
-    setTimeout(() => {
-      setFadeAway(true);
+  // Gracefully transition once initialized or after 1.8s timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFading(true);
       setTimeout(() => {
         onComplete();
-      }, 600);
-    }, 900);
-  };
+      }, 350);
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  // Handle keyboard escape or enter to immediately skip
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        setFading(true);
+        setTimeout(onComplete, 100);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onComplete]);
 
   return (
-    <div 
+    <div
+      className={`splash-launch-overlay ${fading ? 'splash-fading' : ''}`}
+      role="dialog"
+      aria-label="Welcome to GRAM-X"
+      aria-modal="true"
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
-        background: '#040508',
+        zIndex: 99999,
+        background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: fadeAway ? 0 : 1,
-        transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden',
-        userSelect: 'none'
+        padding: '20px',
+        transition: 'opacity 0.35s ease-out',
+        opacity: fading ? 0 : 1,
+        pointerEvents: fading ? 'none' : 'auto',
       }}
     >
-      {/* Background canvas */}
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
-
-      {/* Floating blur orbs */}
-      <style>{`
-        @keyframes driftOrb1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-30px, 40px) scale(1.15); }
-        }
-        @keyframes driftOrb2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(40px, -30px) scale(1.1); }
-        }
-        @keyframes corePulse {
-          0%, 100% { transform: scale(1); opacity: 0.95; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4)); }
-          50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 35px rgba(20, 184, 166, 0.6)); }
-        }
-        @keyframes spinRing {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        .orb-blur-1 {
-          animation: driftOrb1 15s infinite ease-in-out;
-        }
-        .orb-blur-2 {
-          animation: driftOrb2 18s infinite ease-in-out;
-        }
-        .pulse-core {
-          animation: ${isBursting ? 'none' : 'corePulse 4s infinite ease-in-out'};
-          transition: all 0.5s ease-out;
-        }
-        .spin-ring {
-          animation: spinRing 20s infinite linear;
-        }
-      `}</style>
-
-      {/* Ambient background glows */}
-      <div className="absolute w-[45%] h-[45%] bg-indigo-500/10 blur-[130px] rounded-full top-[-10%] left-[-15%] pointer-events-none orb-blur-1" />
-      <div className="absolute w-[45%] h-[45%] bg-teal-500/10 blur-[130px] rounded-full bottom-[-10%] right-[-15%] pointer-events-none orb-blur-2" />
-
-      {/* Interactive Core */}
-      <div 
-        onClick={handleEnterPortal}
-        className="relative z-10 flex flex-col items-center justify-center cursor-pointer"
+      {/* Top National Tricolour Accent */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          display: 'flex',
+        }}
+        aria-hidden="true"
       >
-        {/* Core Container */}
-        <div 
-          className="relative w-44 h-44 rounded-full flex items-center justify-center pulse-core"
+        <div style={{ flex: 1, background: '#FF9933' }} />
+        <div style={{ flex: 1, background: '#ffffff' }} />
+        <div style={{ flex: 1, background: '#138808' }} />
+      </div>
+
+      {/* Main Official Content Box */}
+      <div
+        className="card-gov p-6 text-center anim-fade-up"
+        style={{
+          maxWidth: '480px',
+          width: '100%',
+          boxShadow: '0 10px 25px -5px rgba(0, 33, 71, 0.1), 0 8px 10px -6px rgba(0, 33, 71, 0.1)',
+          borderRadius: '12px',
+          border: '1px solid #cbd5e1',
+          background: '#ffffff',
+          position: 'relative',
+        }}
+      >
+        {/* National Emblem Icon / Badge */}
+        <div
           style={{
-            background: 'rgba(255, 255, 255, 0.01)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: 'inset 0 0 30px rgba(255,255,255,0.02)',
-            transform: isBursting ? 'scale(2.2)' : 'scale(1)',
-            opacity: isBursting ? 0 : 1,
-            transition: 'all 0.8s cubic-bezier(0.19, 1, 0.22, 1)'
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #002147 0%, #003366 100%)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 12px',
+            boxShadow: '0 4px 12px rgba(0, 33, 71, 0.2)',
           }}
         >
-          {/* Outer spin ring */}
-          <div className="absolute inset-2 border border-dashed border-teal-500/20 rounded-full spin-ring" />
-          <div className="absolute inset-5 border border-white/[0.04] rounded-full" />
+          <Shield size={28} />
+        </div>
 
-          {/* Central Holographic Icon */}
-          <div className="relative z-20 flex flex-col items-center gap-1.5 text-zinc-100">
-            <Power className="w-9 h-9 text-teal-400 mb-1" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Initialize</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-indigo-400">Oversight</span>
+        {/* Feature "New" Badge */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <span
+            style={{
+              background: '#ecfdf5',
+              color: '#065f46',
+              border: '1px solid #a7f3d0',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <Sparkles size={11} />
+            New
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            Real-Time Map Intelligence &amp; SLA Transparency
+          </span>
+        </div>
+
+        {/* Heading */}
+        <h1
+          style={{
+            fontSize: '1.65rem',
+            color: '#002147',
+            margin: '0 0 6px',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Welcome to GRAM-X
+        </h1>
+
+        <p
+          style={{
+            fontSize: '0.85rem',
+            color: '#475569',
+            margin: '0 0 20px',
+            lineHeight: 1.4,
+          }}
+        >
+          Grassroots Resource, Action &amp; Intelligence Network • Ministry of Panchayati Raj
+        </p>
+
+        {/* Moving Left-to-Right Civic Ticker */}
+        <div
+          style={{
+            background: '#f1f5f9',
+            border: '1px solid #e2e8f0',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            marginBottom: '20px',
+            overflow: 'hidden',
+            position: 'relative',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            key={tickerIndex}
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              color: '#003366',
+              animation: 'tickerFade 0.4s ease-in-out',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>📢</span>
+            <span>{CIVIC_TICKER_MESSAGES[tickerIndex]}</span>
           </div>
         </div>
 
-        {/* Text indicators */}
-        <div 
-          className="mt-10 text-center transition-all duration-500"
-          style={{ 
-            opacity: isBursting ? 0 : 0.7,
-            transform: isBursting ? 'translateY(15px)' : 'translateY(0)'
-          }}
-        >
-          <h1 className="text-xl font-bold text-white tracking-widest uppercase mb-1.5">GRAM-X</h1>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.25em]">Press core to enter network</p>
+        {/* Loading / Enter Action */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <button
+            onClick={() => {
+              setFading(true);
+              setTimeout(onComplete, 100);
+            }}
+            className="btn-gov btn-gov-primary"
+            style={{
+              width: '100%',
+              padding: '10px 16px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>Enter Platform</span>
+            <ArrowRight size={16} />
+          </button>
         </div>
       </div>
 
-      {/* Bottom info registry details */}
-      <div 
-        className="absolute bottom-10 flex items-center gap-6 text-[9px] text-zinc-600 font-bold uppercase tracking-wider transition-opacity duration-300"
-        style={{ opacity: isBursting ? 0 : 0.4 }}
+      {/* Footer Security Notice */}
+      <div
+        style={{
+          marginTop: '16px',
+          fontSize: '0.75rem',
+          color: '#64748b',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
       >
-        <div className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> SECURE CONTEXT</div>
-        <div className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> NIC ACTIVE STATE</div>
+        <CheckCircle2 size={13} style={{ color: '#16a34a' }} />
+        <span>Secure 256-bit Encrypted Session • DPDPA 2023 Compliant</span>
       </div>
     </div>
   );

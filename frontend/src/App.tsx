@@ -39,6 +39,7 @@ import TechnicianPortal from './components/TechnicianPortal';
 import AdminPortal from './components/AdminPortal';
 import CollectorPortal from './components/CollectorPortal';
 import GovAuthPortal from './components/GovAuthPortal';
+import OperationalGIS from './components/OperationalGIS';
 import PortalFirstPage from './components/PortalFirstPage';
 import SplashScreen from './components/SplashScreen';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1620,146 +1621,24 @@ export default function App() {
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
             )
           )}
 
           {/* 3. LIVE GIS MAP */}
           {activeTab === 'gis_map' && (
-            <div>
-              <div style={{ marginBottom: '16px' }}>
-                <h2>Operational GIS Map View</h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Spatial mapping of assets, incidents, and worker telemetry.</p>
-              </div>
-
-              {/* Map Canvas */}
-              <div style={{ height: '550px', width: '100%', position: 'relative' }}>
-                <MapContainer center={[23.285, 77.452]} zoom={15} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  
-                  {/* Draw simulated boundary polygon for Piparli */}
-                  <Polygon 
-                    positions={[
-                      [23.270, 77.437],
-                      [23.300, 77.437],
-                      [23.300, 77.467],
-                      [23.270, 77.467]
-                    ]}
-                    pathOptions={{ color: '#6366f1', fillOpacity: 0.03, dashArray: '5, 5' }}
-                  />
-
-                  {/* Draw Assets */}
-                  {assets.map(a => {
-                    let color = '#3b82f6'; // operational blue
-                    if (a.status === 'degraded') color = '#eab308'; // warning
-                    if (a.status === 'broken') color = '#ef4444'; // critical
-                    return (
-                      <CircleMarker 
-                        key={`asset-\${a.id}`}
-                        center={[a.latitude, a.longitude]}
-                        radius={8}
-                        pathOptions={{ color: color, fillColor: color, fillOpacity: 0.6 }}
-                      >
-                        <Popup>
-                          <div style={{ color: '#000', fontSize: '0.8rem' }}>
-                            <strong>{a.name}</strong><br/>
-                            Status: <span style={{ color: color, fontWeight: 700 }}>{a.status.toUpperCase()}</span><br/>
-                            Type: {a.type}<br/>
-                            Utilization: {a.current_utilization}%<br/>
-                            <button style={{ marginTop: '8px', padding: '2px 6px', fontSize: '0.65rem' }} onClick={() => {
-                              setSelectedAssetId(a.id);
-                              setActiveTab('asset_intel');
-                            }}>Asset Intel</button>
-                          </div>
-                        </Popup>
-                      </CircleMarker>
-                    );
-                  })}
-
-                  {/* Draw Incidents */}
-                  {incidents.filter(i => i.status !== 'resolved').map(i => {
-                    let color = '#f97316'; // warning orange
-                    if (i.severity === 'critical') color = '#ef4444';
-                    return (
-                      <CircleMarker 
-                        key={`inc-\${i.id}`}
-                        center={[i.latitude, i.longitude]}
-                        radius={10}
-                        pathOptions={{ color: '#000', weight: 2, fillColor: color, fillOpacity: 0.8 }}
-                      >
-                        <Popup>
-                          <div style={{ color: '#000', fontSize: '0.8rem' }}>
-                            <strong style={{ color: '#ef4444' }}>ALERT: {i.title}</strong><br/>
-                            Severity: {i.severity.toUpperCase()}<br/>
-                            Priority Score: {i.priority_score}<br/>
-                            <button style={{ marginTop: '8px', padding: '2px 6px', fontSize: '0.65rem' }} onClick={() => {
-                              setSelectedIncidentId(i.id);
-                              setActiveTab('incident_detail');
-                            }}>Open Case Analysis</button>
-                          </div>
-                        </Popup>
-                      </CircleMarker>
-                    );
-                  })}
-
-                  {/* Suresh Kumar Uber/Rapido style Live Route Tracking (Database Driven) */}
-                  {(() => {
-                    const activeTaskObj = allTasks.find(t => t.status === 'assigned' || t.status === 'accepted' || t.status === 'completed');
-                    if (!activeTaskObj) return null;
-
-                    const linkedInc = incidents.find(i => i.id === activeTaskObj.incident_id);
-                    if (!linkedInc) return null;
-
-                    const techObj = technicians.find(tc => tc.id === activeTaskObj.technician_id);
-                    const techName = techObj ? techObj.name : "Technician";
-
-                    let sureshPos: [number, number] = [23.292, 77.464]; // default workshop
-                    let label = `${techName}: Dispatched (1.2km away)`;
-                    
-                    if (activeTaskObj.status === 'accepted') {
-                      sureshPos = [23.288, 77.458]; // en route
-                      label = `${techName}: En Route (0.5km away) 🛵`;
-                    } else if (activeTaskObj.status === 'completed') {
-                      sureshPos = [linkedInc.latitude, linkedInc.longitude]; // arrived
-                      label = `${techName}: Arrived & Repair Completed`;
-                    }
-
-                    return (
-                      <>
-                        <CircleMarker 
-                          center={sureshPos}
-                          radius={9}
-                          pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.9, weight: 3 }}
-                        >
-                          <Popup>
-                            <div style={{ color: '#000', fontSize: '0.8rem' }}>
-                              <strong>{label}</strong><br/>
-                              Role: PHE Plumber Technician<br/>
-                              Rating: ⭐4.8<br/>
-                              Task Status: <span style={{ textTransform: 'uppercase', fontWeight: 'bold', color: '#10b981' }}>{activeTaskObj.status}</span>
-                            </div>
-                          </Popup>
-                        </CircleMarker>
-                        
-                        {/* Route path polyline */}
-                        {activeTaskObj.status !== 'completed' && (
-                          <Polyline 
-                            positions={[sureshPos, [linkedInc.latitude, linkedInc.longitude]]}
-                            pathOptions={{ color: '#10b981', weight: 4, dashArray: '6, 6' }}
-                          />
-                        )}
-                      </>
-                    );
-                  })()}
-                </MapContainer>
-              </div>
-            </div>
+            <OperationalGIS 
+              currentRole={role}
+              onNavigateTab={(tab, id) => {
+                if (id && tab === 'incident_detail') setSelectedIncidentId(id);
+                if (id && tab === 'asset_intel') setSelectedAssetId(id);
+                setActiveTab(tab as Tab);
+              }}
+              showToast={showToast}
+            />
           )}
 
           {/* 4. INCIDENT QUEUE */}

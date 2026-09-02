@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -88,6 +88,10 @@ class Asset(Base):
     maintenance_history = relationship("MaintenanceHistory", back_populates="asset", cascade="all, delete-orphan")
     incidents = relationship("Incident", back_populates="asset")
 
+    __table_args__ = (
+        Index('idx_assets_geo_village', 'village_id', 'latitude', 'longitude'),
+    )
+
 class SensorReading(Base):
     __tablename__ = "sensor_readings"
     id = Column(Integer, primary_key=True, index=True)
@@ -123,6 +127,13 @@ class Incident(Base):
     reporter = relationship("User")
     evidence = relationship("IncidentEvidence", back_populates="incident", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="incident", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index('idx_incidents_status_village', 'status', 'village_id'),
+        Index('idx_incidents_geo', 'latitude', 'longitude'),
+        Index('idx_incidents_category_status', 'category', 'status'),
+        Index('idx_incidents_reporter_created', 'reporter_id', 'created_at'),
+    )
 
 
 class IncidentEvidence(Base):
@@ -172,6 +183,11 @@ class Notification(Base):
     read_at = Column(DateTime, nullable=True)
 
     recipient = relationship("User")
+
+    __table_args__ = (
+        Index('idx_notifications_role_read', 'recipient_role', 'read_at'),
+        Index('idx_notifications_recipient_created', 'recipient_id', 'created_at'),
+    )
 
 class Project(Base):
     __tablename__ = "projects"
@@ -257,6 +273,11 @@ class Task(Base):
 
     incident = relationship("Incident", back_populates="tasks")
     technician = relationship("Technician", back_populates="tasks")
+
+    __table_args__ = (
+        Index('idx_tasks_tech_status', 'technician_id', 'status'),
+        Index('idx_tasks_incident_status', 'incident_id', 'status'),
+    )
 
 class MaintenanceHistory(Base):
     __tablename__ = "maintenance_history"
