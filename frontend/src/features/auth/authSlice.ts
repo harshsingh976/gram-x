@@ -12,6 +12,7 @@ export interface AuthState {
   error: string | null;
 }
 
+const initialToken = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
 const initialRole = typeof localStorage !== 'undefined' ? (localStorage.getItem('role') as UserRole) || 'citizen' : 'citizen';
 const initialUsername = typeof localStorage !== 'undefined' ? localStorage.getItem('username') || '' : '';
 const initialFullName = typeof localStorage !== 'undefined' ? localStorage.getItem('fullName') || '' : '';
