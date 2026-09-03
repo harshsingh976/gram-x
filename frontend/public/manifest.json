@@ -1,0 +1,20 @@
+{
+  "name": "GRAM-X — Digital Rural Governance Platform",
+  "short_name": "GRAM-X",
+  "description": "Enterprise-grade digital rural governance platform connecting citizens, field workers, and Panchayat administrations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "productivity", "utilities"],
+  "lang": "en-IN"
+}

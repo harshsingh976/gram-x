@@ -21,6 +21,8 @@ import {
 import { GrievanceForm } from './grievance/GrievanceForm';
 import { GrievanceList } from './grievance/GrievanceList';
 import { GrievanceDetailModal } from './grievance/GrievanceDetailModal';
+import { NotificationBell } from './notifications/NotificationBell';
+import { NetworkIndicator } from './common/NetworkIndicator';
 import { Button } from './ui/Button';
 
 interface CitizenPortalProps {
@@ -76,6 +78,9 @@ export default function CitizenPortal({
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-slate-950 text-slate-100 min-h-screen border-x border-slate-800 font-sans pb-16">
+      {/* Network Offline/Online Indicator Banner */}
+      <NetworkIndicator />
+
       {/* Header */}
       <header className="bg-slate-900/90 backdrop-blur-md p-4 sm:p-5 sticky top-0 z-10 shadow-md flex justify-between items-center border-b border-slate-800">
         <div>
@@ -87,9 +92,21 @@ export default function CitizenPortal({
           </div>
           <p className="text-slate-400 text-xs mt-0.5">{t('citizen.overview')}</p>
         </div>
-        <span className="text-xs bg-slate-800 text-slate-200 px-3 py-1.5 rounded-xl font-bold border border-slate-700">
-          {fullName}
-        </span>
+        
+        <div className="flex items-center gap-2.5">
+          <NotificationBell
+            onSelectGrievance={(gId) => {
+              const target = grievances.find((g) => String(g.id) === String(gId));
+              if (target) {
+                setSelectedGrievance(target);
+                setIsDetailModalOpen(true);
+              }
+            }}
+          />
+          <span className="text-xs bg-slate-800 text-slate-200 px-3 py-1.5 rounded-xl font-bold border border-slate-700">
+            {fullName}
+          </span>
+        </div>
       </header>
 
       {/* VIEW: DASHBOARD */}

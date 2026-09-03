@@ -37,6 +37,8 @@ import type { AIAnalysisResult, SimilarityMatch } from '../../services/ai/types'
 import { AIRecommendationCard } from '../ai/AIRecommendationCard';
 import { SimilarGrievancesWarning } from '../ai/SimilarGrievancesWarning';
 import { LocationPicker } from '../maps/LocationPicker';
+import { saveDraft, getDraft, clearDraft, hasDraft } from '../../services/draftService';
+import { checkRateLimit } from '../../services/rateLimiter';
 import { Button } from '../ui/Button';
 
 export interface GrievanceFormProps {
@@ -84,10 +86,49 @@ export const GrievanceForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
 
   useEffect(() => {
     getMyGrievances().then((list) => setExistingGrievances(list)).catch(() => {});
+    const existing = getDraft();
+    if (existing && (existing.title || existing.description)) {
+      setHasSavedDraft(true);
+    }
   }, []);
+
+  const restoreDraft = () => {
+    const draft = getDraft();
+    if (draft) {
+      setTitle(draft.title || '');
+      setDescription(draft.description || '');
+      setCategory(draft.category || 'water');
+      setPriority(draft.priority || 'medium');
+      if (draft.location_address) setLocationAddress(draft.location_address);
+      if (draft.location_lat) setLocationLat(draft.location_lat);
+      if (draft.location_lng) setLocationLng(draft.location_lng);
+      setHasSavedDraft(false);
+    }
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setHasSavedDraft(false);
+  };
+
+  // Auto-save draft on user edits
+  useEffect(() => {
+    if (title.trim() || description.trim()) {
+      saveDraft({
+        title,
+        description,
+        category,
+        priority,
+        location_address: locationAddress,
+        location_lat: locationLat,
+        location_lng: locationLng,
+      });
+    }
+  }, [title, description, category, priority, locationAddress, locationLat, locationLng]);
 
   // Debounced AI triage & similarity check as citizen writes
   useEffect(() => {
@@ -139,6 +180,13 @@ export const GrievanceForm = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    // Rate Limit Check
+    const rateCheck = checkRateLimit('submit_grievance');
+    if (!rateCheck.allowed) {
+      setErrorMessage(`Rate limit reached. Please wait ${rateCheck.retryAfterSeconds}s before submitting another grievance.`);
+      return;
+    }
+
     const errors: Record<string, string> = {};
     if (!title.trim()) errors.title = 'Please provide a clear title for the issue.';
     if (title.trim().length < 5) errors.title = 'Title should be at least 5 characters.';
@@ -166,6 +214,7 @@ export const GrievanceForm = ({
       };
 
       const result = await submitGrievance(payload);
+      clearDraft(); // Clean local draft upon confirmed server submission
       if (onSuccess) onSuccess(result);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to submit grievance. Please try again.');
@@ -176,6 +225,32 @@ export const GrievanceForm = ({
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-5 ${className}`}>
+      {/* Draft Recovery Notification Banner */}
+      {hasSavedDraft && (
+        <div className="bg-sky-950/70 border border-sky-500/40 rounded-xl p-3 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2 text-sky-300">
+            <FileText className="w-4 h-4 text-sky-400 shrink-0" />
+            <span>An unsaved grievance draft was recovered from your device.</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="text-[11px] font-bold text-sky-400 hover:text-white bg-sky-900/80 px-2.5 py-1 rounded-lg border border-sky-500/30 transition-colors cursor-pointer"
+            >
+              Restore Draft
+            </button>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="text-[11px] font-semibold text-slate-400 hover:text-rose-400 px-1.5 py-1 transition-colors cursor-pointer"
+            >
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
+
       {errorMessage && (
         <div className="bg-rose-950/40 border border-rose-500/50 rounded-xl p-3 text-rose-300 text-xs flex items-start gap-2">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />

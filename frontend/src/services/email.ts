@@ -46,6 +46,26 @@ export const dispatchTransactionalEmail = async (
   return { success: true, messageId: `mock_${Date.now()}` };
 };
 
+/**
+ * Helper to dispatch grievance status notification emails
+ */
+export const sendGrievanceStatusEmail = async (params: {
+  to: string;
+  citizenName: string;
+  grievanceRef: string;
+  status: string;
+  summary: string;
+}): Promise<{ success: boolean; messageId?: string }> => {
+  return dispatchTransactionalEmail({
+    to: params.to,
+    subject: `GRAM-X Update: ${params.grievanceRef} - ${params.status}`,
+    text: `Hello ${params.citizenName},\n\nYour grievance (${params.grievanceRef}) update: ${params.status}\n\n${params.summary}\n\nTrack progress on GRAM-X Portal.`,
+    template: 'incident_verified',
+    variables: params,
+  });
+};
+
 export default {
   dispatchTransactionalEmail,
+  sendGrievanceStatusEmail,
 };
