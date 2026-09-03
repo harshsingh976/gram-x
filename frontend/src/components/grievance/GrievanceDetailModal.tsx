@@ -1,9 +1,14 @@
 /**
- * GRAM-X Grievance Detail Modal Component
- * Displays complete metadata, evidence attachments, auditable timeline, and role-driven action buttons.
+ * GRAM-X Grievance Detail Modal Component (Phase 3)
+ * Displays:
+ * - Full metadata, location coordinates, and status badge
+ * - AI Generated Summaries & Routing Recommendations
+ * - OCR Text Extraction on uploaded attachments
+ * - Auditable Timeline & Comments
+ * - Role-Driven Action Controls (Citizen, Worker, Admin, Collector)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   MapPin,
@@ -18,6 +23,9 @@ import {
   MessageSquare,
   FileText,
   ExternalLink,
+  Sparkles,
+  Search,
+  ScanText,
   Droplets,
   Zap,
   Truck,
@@ -31,10 +39,14 @@ import {
   updateGrievanceStatus,
   addGrievanceComment,
 } from '../../services/grievanceService';
+import { summarizeGrievance, classifyGrievance } from '../../services/ai/aiService';
+import type { AIAnalysisResult } from '../../services/ai/types';
+import { extractTextFromAttachment, type OCRExtractionResult } from '../../services/ocr/ocrService';
 import { GrievanceStatusBadge } from './GrievanceStatusBadge';
 import { GrievanceTimeline } from './GrievanceTimeline';
 import { AssignWorkerModal } from './AssignWorkerModal';
 import { EscalateGrievanceModal } from './EscalateGrievanceModal';
+import { AIRecommendationCard } from '../ai/AIRecommendationCard';
 import { Button } from '../ui/Button';
 import type { UserRole } from '../../types';
 
@@ -58,13 +70,36 @@ export const GrievanceDetailModal = ({
   const [isCommentLoading, setIsCommentLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Phase 3 Smart Data
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
+  const [ocrResults, setOcrResults] = useState<Record<string, OCRExtractionResult>>({});
+
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
   const [resolutionNoteInput, setResolutionNoteInput] = useState('');
   const [showResolutionBox, setShowResolutionBox] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentGrievance(grievance);
+    if (grievance) {
+      // Fetch AI summary & classification
+      summarizeGrievance(grievance.description).then((s) => setAiSummary(s));
+      classifyGrievance({
+        title: grievance.title,
+        description: grievance.description,
+        category: grievance.category,
+      }).then((res) => setAiAnalysis(res));
+
+      // Scan attachments with OCR
+      if (grievance.attachments && grievance.attachments.length > 0) {
+        grievance.attachments.forEach((att) => {
+          extractTextFromAttachment(att.file_name).then((ocrRes) => {
+            setOcrResults((prev) => ({ ...prev, [att.id]: ocrRes }));
+          });
+        });
+      }
+    }
   }, [grievance]);
 
   if (!isOpen || !currentGrievance) return null;
@@ -74,7 +109,7 @@ export const GrievanceDetailModal = ({
     if (onGrievanceUpdated) onGrievanceUpdated(updated);
   };
 
-  // Add a comment to the timeline
+  // Add comment to timeline
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -92,7 +127,6 @@ export const GrievanceDetailModal = ({
 
       await addGrievanceComment(currentGrievance.id, newComment.trim(), actorRoleFormatted);
       setNewComment('');
-      // Update local timeline
       const updated = { ...currentGrievance };
       updated.updates = [
         ...(updated.updates || []),
@@ -235,7 +269,14 @@ export const GrievanceDetailModal = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 text-xs">
           <div className="flex items-center gap-2 text-slate-300">
             <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
-            <span className="truncate">{currentGrievance.location_address || 'Piparli Ward Area'}</span>
+            <span className="truncate">
+              {currentGrievance.location_address || 'Panchayat Area'}
+              {currentGrievance.location_lat && (
+                <span className="text-[10px] font-mono text-slate-500 ml-1">
+                  ({currentGrievance.location_lat.toFixed(3)}°N, {currentGrievance.location_lng?.toFixed(3)}°E)
+                </span>
+              )}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-300 sm:justify-end">
             <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
@@ -250,37 +291,77 @@ export const GrievanceDetailModal = ({
           </div>
         </div>
 
+        {/* AI Generated Concise Summary (Phase 3) */}
+        {aiSummary && (
+          <div className="bg-sky-950/30 border border-sky-500/30 rounded-xl p-3 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-sky-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                AI Generated Executive Summary
+              </span>
+              <span className="text-[9px] text-slate-500 font-mono">Factual Extraction</span>
+            </div>
+            <p className="text-xs text-slate-200 leading-relaxed italic">
+              "{aiSummary}"
+            </p>
+          </div>
+        )}
+
         {/* Description Body */}
         <div className="space-y-1.5">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Description</h4>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Citizen Description</h4>
           <p className="text-xs sm:text-sm text-slate-200 bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60 leading-relaxed break-words">
             {currentGrievance.description}
           </p>
         </div>
 
-        {/* Attachments Section */}
+        {/* Attachments Section with OCR Results */}
         {currentGrievance.attachments && currentGrievance.attachments.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Evidence Attachments (Cloudflare R2)
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <ScanText className="w-3.5 h-3.5 text-emerald-400" />
+              Evidence Attachments &amp; OCR Scans
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {currentGrievance.attachments.map((att) => (
-                <a
-                  key={att.id}
-                  href={att.public_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-800 bg-slate-950 hover:border-sky-500/50 transition-colors group"
-                >
-                  <FileText className="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  <div className="overflow-hidden">
-                    <p className="text-xs text-slate-200 font-medium truncate">{att.file_name}</p>
-                    <p className="text-[10px] text-slate-500">{(att.file_size / 1024).toFixed(1)} KB</p>
+            <div className="space-y-2">
+              {currentGrievance.attachments.map((att) => {
+                const ocr = ocrResults[att.id];
+                return (
+                  <div
+                    key={att.id}
+                    className="p-3 rounded-xl border border-slate-800 bg-slate-950 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <FileText className="w-4 h-4 text-sky-400 shrink-0" />
+                        <span className="text-xs text-slate-200 font-medium truncate">{att.file_name}</span>
+                        <span className="text-[10px] text-slate-500">({(att.file_size / 1024).toFixed(1)} KB)</span>
+                      </div>
+                      <a
+                        href={att.public_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 hover:underline shrink-0"
+                      >
+                        View File <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    {ocr && (
+                      <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-[11px] text-slate-300 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-slate-500">
+                          <span className="font-bold text-emerald-400 flex items-center gap-1">
+                            <ScanText className="w-3 h-3" /> OCR Extracted Text (Confidence: {Math.round(ocr.confidence * 100)}%)
+                          </span>
+                          <span className="uppercase font-mono">{ocr.language}</span>
+                        </div>
+                        <p className="text-slate-300 font-mono text-[10px] leading-relaxed break-words">
+                          {ocr.extracted_text}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-600 group-hover:text-sky-400 ml-auto shrink-0" />
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -445,24 +526,6 @@ export const GrievanceDetailModal = ({
                 className="bg-indigo-600 hover:bg-indigo-500 text-xs"
               >
                 Re-assign Authority
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={async () => {
-                  const directive = prompt('Enter District Collector Directive:');
-                  if (directive) {
-                    const updated = await updateGrievanceStatus(
-                      currentGrievance.id,
-                      'IN_PROGRESS',
-                      `District Collector Directive Issued: ${directive}`,
-                      'District Collector'
-                    );
-                    handleUpdateGrievance(updated);
-                  }
-                }}
-                className="text-xs text-sky-400 hover:bg-sky-950/40"
-              >
-                Issue District Order
               </Button>
             </div>
           )}

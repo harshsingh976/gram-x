@@ -10,6 +10,8 @@ import * as api from '../api';
 import { IMAGE_MAP, getServiceImage, getInitials, getRoleAvatarGradient } from '../imageMap';
 import LiveClock from './LiveClock';
 import NotificationTicker from './NotificationTicker';
+import GrievanceMap from './maps/GrievanceMap';
+import GrievanceAnalyticsDashboard from './analytics/GrievanceAnalyticsDashboard';
 
 
 interface AdminPortalProps {
@@ -38,7 +40,7 @@ export default function AdminPortal({
   onRefresh
 }: AdminPortalProps) {
   const notify = showToast || ((msg: string) => alert(msg));
-  const [view, setView] = useState<'dashboard' | 'incident_detail' | 'exceptions' | 'health' | 'audit'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'incident_detail' | 'exceptions' | 'health' | 'audit' | 'map' | 'analytics'>('dashboard');
   const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -257,6 +259,24 @@ export default function AdminPortal({
     });
   }, [incidents, searchQuery, categoryFilter]);
 
+  const formattedGrievances = useMemo(() => {
+    return incidents.map((i: any) => ({
+      id: i.id,
+      reference_no: i.reference_no || `GX-2026-${String(i.id).padStart(6, '0')}`,
+      title: i.title || 'Untitled Grievance',
+      description: i.description || '',
+      category: i.category || 'water',
+      priority: i.severity || i.priority || 'medium',
+      status: (i.status || 'SUBMITTED').toUpperCase(),
+      village_id: i.village_id || 1,
+      location_address: i.location_address || 'Panchayat Area',
+      location_lat: i.latitude || 23.2845,
+      location_lng: i.longitude || 77.4521,
+      created_at: i.created_at || new Date().toISOString(),
+      updated_at: i.updated_at || new Date().toISOString(),
+    }));
+  }, [incidents]);
+
   const selectedIncident = useMemo(() => {
     if (!selectedIncidentId) return incidents[0] || null;
     return incidents.find(i => i.id === selectedIncidentId) || incidents[0] || null;
@@ -351,6 +371,24 @@ export default function AdminPortal({
             }`}
           >
             <FileText className="w-5 h-5 text-indigo-400" /> Audit Trail
+          </button>
+
+          <button 
+            onClick={() => setView('map')}
+            className={`w-full text-left px-4 py-2 rounded-lg font-semibold flex items-center gap-2 cursor-pointer transition-colors ${
+              view === 'map' ? 'bg-sky-600 text-white' : 'hover:bg-slate-800 text-slate-300'
+            }`}
+          >
+            <MapPin className="w-5 h-5 text-sky-400" /> GIS &amp; MapLibre
+          </button>
+
+          <button 
+            onClick={() => setView('analytics')}
+            className={`w-full text-left px-4 py-2 rounded-lg font-semibold flex items-center gap-2 cursor-pointer transition-colors ${
+              view === 'analytics' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300'
+            }`}
+          >
+            <TrendingUp className="w-5 h-5 text-indigo-400" /> AI Insights &amp; Analytics
           </button>
 
           <button 
@@ -1425,6 +1463,36 @@ export default function AdminPortal({
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* VIEW: MAP / GIS */}
+          {view === 'map' && (
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Spatial Grievance Intelligence (MapLibre GIS)</h2>
+                  <p className="text-xs text-slate-500">Interactive ward-level mapping of active civic incidents and worker routes.</p>
+                </div>
+              </div>
+              <GrievanceMap
+                grievances={formattedGrievances}
+                height="h-[520px]"
+                onSelectGrievance={(g) => {
+                  setSelectedIncidentId(typeof g.id === 'number' ? g.id : parseInt(String(g.id)) || 1);
+                  setView('incident_detail');
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: ANALYTICS & AI INSIGHTS */}
+          {view === 'analytics' && (
+            <div className="p-6">
+              <GrievanceAnalyticsDashboard
+                grievances={formattedGrievances}
+                title="Panchayat Governance Analytics &amp; AI Pattern Engine"
+              />
             </div>
           )}
 
