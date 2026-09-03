@@ -1,9 +1,10 @@
 /**
- * GRAM-X Authentication Context
- * Manages global authentication lifecycle, session persistence, and role resolution.
+ * GRAM-X Centralized Authentication Context
+ * Subscribes to Supabase Auth state changes and provides role-based session management.
  */
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 import * as authService from '../services/authService';
 import type { UserRole } from '../types';
 
@@ -14,10 +15,15 @@ export interface AuthContextType {
   token: string | null;
   role: UserRole;
   authStatus: AuthStatus;
+  signIn: (credentials: authService.LoginCredentials) => Promise<void>;
   login: (credentials: authService.LoginCredentials) => Promise<void>;
-  quickLogin: (demoRole: 'citizen' | 'worker' | 'admin' | 'district') => Promise<void>;
+  signUp: (userData: authService.RegisterUserData) => Promise<void>;
+  signup: (userData: authService.RegisterUserData) => Promise<void>;
   register: (userData: authService.RegisterUserData) => Promise<void>;
+  signOut: () => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (emailOrUsername: string) => Promise<{ message: string }>;
+  quickLogin: (demoRole: 'citizen' | 'worker' | 'admin' | 'district') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,51 +48,89 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return token ? 'AUTH_LOADING' : 'AUTH_UNAUTHENTICATED';
   });
 
-  // Verify token and fetch latest user profile on initial mount
+  // 1. Initial Session & Supabase onAuthStateChange Listener
   useEffect(() => {
-    const initializeAuth = async () => {
-      if (!token) {
-        setAuthStatus('AUTH_UNAUTHENTICATED');
-        return;
-      }
-      try {
-        const me = await authService.getMe();
-        setUser(me);
-        setRole(me.role);
-        setAuthStatus('AUTHENTICATED');
-      } catch (err) {
-        console.warn('[GRAM-X Auth] Session validation expired or invalid:', err);
-        authService.clearAuthSession();
-        setToken(null);
-        setUser(null);
-        setAuthStatus('AUTH_UNAUTHENTICATED');
-      }
-    };
+    if (isSupabaseConfigured()) {
+      // Get current active session from Supabase Auth
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setToken(session.access_token);
+          authService.getMe().then((profile) => {
+            setUser(profile);
+            setRole(profile.role);
+            setAuthStatus('AUTHENTICATED');
+          }).catch(() => {
+            setAuthStatus('AUTH_UNAUTHENTICATED');
+          });
+        } else {
+          setAuthStatus('AUTH_UNAUTHENTICATED');
+        }
+      });
 
-    initializeAuth();
+      // Listen to Supabase Auth state changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (session) {
+            setToken(session.access_token);
+            try {
+              const profile = await authService.getMe();
+              setUser(profile);
+              setRole(profile.role);
+              setAuthStatus('AUTHENTICATED');
+            } catch {
+              setAuthStatus('AUTHENTICATED');
+            }
+          } else {
+            setToken(null);
+            setUser(null);
+            setAuthStatus('AUTH_UNAUTHENTICATED');
+          }
+        }
+      );
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } else {
+      // Demo / Local storage validation fallback
+      if (token) {
+        authService.getMe().then((profile) => {
+          setUser(profile);
+          setRole(profile.role);
+          setAuthStatus('AUTHENTICATED');
+        }).catch(() => {
+          setAuthStatus('AUTH_UNAUTHENTICATED');
+        });
+      } else {
+        setAuthStatus('AUTH_UNAUTHENTICATED');
+      }
+    }
   }, [token]);
 
-  const login = async (credentials: authService.LoginCredentials): Promise<void> => {
-    const data = await authService.loginUser(credentials);
-    setToken(data.access_token);
-    
-    // Fetch profile
-    let me: authService.UserProfile;
-    try {
-      me = await authService.getMe();
-    } catch {
-      me = {
-        id: 1,
-        username: data.username,
-        name: data.name || data.username,
-        role: data.role as UserRole,
-      };
-    }
-
-    authService.saveAuthSession(data, me);
-    setUser(me);
-    setRole(me.role);
+  const signIn = async (credentials: authService.LoginCredentials): Promise<void> => {
+    const res = await authService.loginUser(credentials);
+    setToken(res.access_token);
+    setUser(res.user);
+    setRole(res.user.role);
     setAuthStatus('AUTHENTICATED');
+  };
+
+  const signUp = async (userData: authService.RegisterUserData): Promise<void> => {
+    const profile = await authService.registerUser(userData);
+    setUser(profile);
+    setRole(profile.role);
+    setAuthStatus('AUTHENTICATED');
+  };
+
+  const signOut = async (): Promise<void> => {
+    await authService.logoutUser();
+    setToken(null);
+    setUser(null);
+    setAuthStatus('AUTH_UNAUTHENTICATED');
+  };
+
+  const resetPassword = async (emailOrUsername: string): Promise<{ message: string }> => {
+    return await authService.forgotPassword(emailOrUsername);
   };
 
   const quickLogin = async (demoRole: 'citizen' | 'worker' | 'admin' | 'district'): Promise<void> => {
@@ -96,25 +140,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       admin: { username: 'admin', password: 'admin123' },
       district: { username: 'district', password: 'district123' },
     };
-
     const target = credentialsMap[demoRole] || credentialsMap.citizen;
-    await login(target);
-  };
-
-  const register = async (userData: authService.RegisterUserData): Promise<void> => {
-    await authService.registerUser(userData);
-    // Automatically log user in after successful registration
-    await login({
-      username: userData.username,
-      password: userData.password,
-    });
-  };
-
-  const logout = async (): Promise<void> => {
-    await authService.logoutUser();
-    setToken(null);
-    setUser(null);
-    setAuthStatus('AUTH_UNAUTHENTICATED');
+    await signIn(target);
   };
 
   return (
@@ -124,10 +151,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         token,
         role,
         authStatus,
-        login,
+        signIn,
+        login: signIn,
+        signUp,
+        signup: signUp,
+        register: signUp,
+        signOut,
+        logout: signOut,
+        resetPassword,
         quickLogin,
-        register,
-        logout,
       }}
     >
       {children}
@@ -142,3 +174,5 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+export default AuthContext;
