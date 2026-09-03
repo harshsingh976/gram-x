@@ -16,8 +16,15 @@ const API_BASE = (function getApiBase(): string {
     }
     return '/api';
   }
+  // Production safety guard: never fall back to a local development server.
+  // If import.meta.env.PROD is true and we reach here, VITE_API_URL must be set.
+  if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
+    console.warn('[GRAM-X] VITE_API_URL is not set. API calls disabled in production.');
+    return '';
+  }
   return 'http://127.0.0.1:8000/api';
 })();
+
 
 // Helper to construct headers with JWT auth if present
 export function getHeaders(token?: string) {

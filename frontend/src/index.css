@@ -2875,3 +2875,81 @@ img[src=""], img:not([src]) { visibility: hidden; }
   z-index: var(--z-notify) !important;
 }
 
+
+/* ---------------------------------------------------------------
+   PHASE 6 — MICRO-INTERACTIONS & POLISH LAYER
+   --------------------------------------------------------------- */
+
+.btn-primary-action {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease-out;
+  will-change: transform;
+}
+.btn-primary-action:hover:not(:disabled) {
+  transform: scale(1.03) translateY(-1px);
+  box-shadow: 0 8px 24px rgba(21, 94, 239, 0.25);
+}
+.btn-primary-action:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary-action:disabled { transform: none; box-shadow: none; }
+
+.btn-gov-primary {
+  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.18s ease-out;
+  will-change: transform;
+}
+.btn-gov-primary:hover:not(:disabled) { transform: scale(1.02) translateY(-1px); }
+.btn-gov-primary:active:not(:disabled) { transform: scale(0.98) translateY(0); }
+
+.card-interactive {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease;
+  will-change: transform;
+}
+.card-interactive:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.card-interactive:active { transform: translateY(0); }
+
+@keyframes gramx-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-enter { animation: gramx-modal-in 0.22s cubic-bezier(0.34, 1.3, 0.64, 1) both; }
+
+@keyframes gramx-toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes gramx-toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.95); }
+}
+.toast-enter { animation: gramx-toast-in 0.2s cubic-bezier(0.34, 1.3, 0.64, 1) both; }
+.toast-exit  { animation: gramx-toast-out 0.18s ease-in both; }
+
+@keyframes gramx-page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: gramx-page-in 0.2s ease-out both; }
+
+@keyframes gramx-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+}
+.badge-pulse-danger { animation: gramx-badge-pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+
+@keyframes gramx-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+  background-size: 800px 100%;
+  animation: gramx-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary-action, .btn-gov-primary, .card-interactive {
+    transition: none !important; transform: none !important;
+  }
+  .modal-enter, .toast-enter, .toast-exit, .page-enter,
+  .badge-pulse-danger, .skeleton-shimmer {
+    animation: none !important; transform: none !important; opacity: 1 !important;
+  }
+}

@@ -28,10 +28,10 @@ export const SignIn = () => {
 
     const errors: Record<string, string> = {};
     if (!username.trim()) {
-      errors.username = 'User ID or Email is required';
+      errors.username = t('auth.error.user_id_required');
     }
     if (!password) {
-      errors.password = 'Password is required';
+      errors.password = t('auth.error.password_required');
     }
 
     if (Object.keys(errors).length > 0) {
@@ -45,7 +45,7 @@ export const SignIn = () => {
       await login({ username: username.trim(), password });
       navigate('/');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Authentication failed. Please verify your credentials.');
+      setErrorMessage(err.message || t('auth.error.invalid_credentials'));
     } finally {
       setIsLoading(false);
     }
@@ -68,17 +68,17 @@ export const SignIn = () => {
   return (
     <ModalCard
       title="GRAM-X"
-      subtitle="National Rural Infrastructure & Governance Network"
+      subtitle={t('auth.subtitle.sign_in')}
       headerContent={<AuthTabs />}
     >
       {/* 1-Click Quick Demo Authority Credentials */}
       <div className="auth-quick-demo">
         <div className="auth-quick-title">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            Quick Demo Authority Access
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            {t('auth.quick_demo_title')}
           </span>
-          <span className="text-[10px] text-emerald-400 font-semibold">1-Click Sign In</span>
+          <span style={{ color: '#16a34a', fontWeight: 700 }}>{t('auth.quick_demo_1click')}</span>
         </div>
         <div className="auth-quick-grid">
           <button
@@ -125,12 +125,12 @@ export const SignIn = () => {
       <form onSubmit={handleLoginSubmit} className="auth-form" noValidate>
         <AuthInput
           id="login-username"
-          label="User ID or Email"
+          label={t('auth.field.user_id')}
           name="username"
           autoComplete="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="e.g. citizen, worker, admin"
+          placeholder={t('auth.field.user_id_placeholder')}
           error={fieldErrors.username}
           required
           disabled={isLoading}
@@ -138,35 +138,36 @@ export const SignIn = () => {
 
         <AuthInput
           id="login-password"
-          label="Password"
+          label={t('auth.field.password')}
           name="password"
           isPassword
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your account password"
+          placeholder={t('auth.field.password_placeholder')}
           error={fieldErrors.password}
           required
           disabled={isLoading}
           extraLabelAction={
             <Link
               to="/reset-key"
-              className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              style={{ fontSize: '0.75rem', color: '#155EEF', fontWeight: 600 }}
+              className="hover:underline"
             >
-              Forgot password?
+              {t('auth.forgot_password')}
             </Link>
           }
         />
 
-        <div className="flex items-center justify-between pt-1">
-          <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm text-slate-400">
+        <div className="flex items-center gap-2 pt-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none" style={{ fontSize: '0.82rem', color: '#475569' }}>
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
+              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
             />
-            <span>Keep session active</span>
+            <span>{t('auth.field.keep_session')}</span>
           </label>
         </div>
 
@@ -175,11 +176,11 @@ export const SignIn = () => {
           variant="primary"
           size="md"
           isLoading={isLoading}
-          loadingText="Signing In to GRAM-X..."
+          loadingText={t('auth.btn.signing_in')}
           rightIcon={<ArrowRight className="w-4 h-4" />}
           className="mt-2"
         >
-          Sign In to GRAM-X
+          {t('auth.btn.sign_in')}
         </Button>
       </form>
     </ModalCard>

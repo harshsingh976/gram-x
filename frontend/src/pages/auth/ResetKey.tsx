@@ -7,10 +7,12 @@ import { AuthAlert } from '../../components/auth/AuthAlert';
 import { AuthInput } from '../../components/auth/AuthInput';
 import { Button } from '../../components/ui/Button';
 import * as authService from '../../services/authService';
+import { useLanguage } from '../../i18n';
 import '../../styles/auth.css';
 
 export const ResetKey = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [identifier, setIdentifier] = useState('');
@@ -27,7 +29,7 @@ export const ResetKey = () => {
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
-      setFieldErrors({ identifier: 'Please enter your registered username or email' });
+      setFieldErrors({ identifier: t('auth.error.identifier_required') });
       return;
     }
     setFieldErrors({});
@@ -35,7 +37,7 @@ export const ResetKey = () => {
     setErrorMessage(null);
     try {
       await authService.forgotPassword(identifier.trim());
-      setSuccessMessage('Verification code dispatched to your registered email/mobile.');
+      setSuccessMessage(t('auth.success.otp_sent'));
       setStep(2);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to dispatch reset code. Please verify the identifier.');
@@ -47,7 +49,7 @@ export const ResetKey = () => {
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otpCode.trim() || otpCode.trim().length < 4) {
-      setFieldErrors({ otpCode: 'Please enter the verification OTP code' });
+      setFieldErrors({ otpCode: t('auth.error.otp_required') });
       return;
     }
     setFieldErrors({});
@@ -56,7 +58,7 @@ export const ResetKey = () => {
     try {
       const data = await authService.verifyResetOtp(identifier.trim(), otpCode.trim());
       setResetTicket(data.reset_ticket);
-      setSuccessMessage('Verification confirmed! Please set your new password.');
+      setSuccessMessage(t('auth.success.otp_verified'));
       setStep(3);
     } catch (err: any) {
       setErrorMessage(err.message || 'Invalid or expired OTP code.');
@@ -68,11 +70,11 @@ export const ResetKey = () => {
   const handleStep3Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
-      setFieldErrors({ newPassword: 'Password must be at least 6 characters' });
+      setFieldErrors({ newPassword: t('auth.error.password_min') });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setFieldErrors({ confirmPassword: 'Passwords do not match' });
+      setFieldErrors({ confirmPassword: t('auth.error.passwords_mismatch') });
       return;
     }
     setFieldErrors({});
@@ -84,7 +86,7 @@ export const ResetKey = () => {
         reset_ticket: resetTicket,
         new_password: newPassword,
       });
-      setSuccessMessage('Password reset successfully! Redirecting to Sign In...');
+      setSuccessMessage(t('auth.success.password_reset'));
       setTimeout(() => {
         navigate('/login');
       }, 1500);
@@ -97,8 +99,8 @@ export const ResetKey = () => {
 
   return (
     <ModalCard
-      title="Reset Security Key"
-      subtitle="Recover access using your registered credentials & OTP"
+      title={t('auth.reset_key_title')}
+      subtitle={t('auth.subtitle.reset')}
       headerContent={<AuthTabs />}
     >
       {errorMessage && <AuthAlert type="error">{errorMessage}</AuthAlert>}
@@ -108,10 +110,10 @@ export const ResetKey = () => {
         <form onSubmit={handleStep1Submit} className="auth-form" noValidate>
           <AuthInput
             id="forgot-id"
-            label="Registered User ID or Email"
+            label={t('auth.field.user_id_or_email')}
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="e.g. citizen, admin@gramx.gov.in"
+            placeholder={t('auth.field.user_id_placeholder')}
             error={fieldErrors.identifier}
             required
             disabled={isLoading}
@@ -122,11 +124,11 @@ export const ResetKey = () => {
             variant="primary"
             size="md"
             isLoading={isLoading}
-            loadingText="Dispatching OTP..."
+            loadingText={t('auth.btn.sending_code')}
             rightIcon={<KeyRound className="w-4 h-4" />}
             className="mt-2"
           >
-            Send Verification Code
+            {t('auth.btn.send_code')}
           </Button>
         </form>
       )}
@@ -135,10 +137,10 @@ export const ResetKey = () => {
         <form onSubmit={handleStep2Submit} className="auth-form" noValidate>
           <AuthInput
             id="forgot-otp"
-            label="Enter 6-Digit OTP Code"
+            label={t('auth.field.otp')}
             value={otpCode}
             onChange={(e) => setOtpCode(e.target.value)}
-            placeholder="e.g. 123456"
+            placeholder={t('auth.field.otp_placeholder')}
             error={fieldErrors.otpCode}
             required
             disabled={isLoading}
@@ -154,17 +156,17 @@ export const ResetKey = () => {
               onClick={() => setStep(1)}
               leftIcon={<ArrowLeft className="w-4 h-4" />}
             >
-              Back
+              {t('auth.btn.back')}
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="md"
               isLoading={isLoading}
-              loadingText="Verifying..."
+              loadingText={t('auth.btn.verifying')}
               rightIcon={<ShieldCheck className="w-4 h-4" />}
             >
-              Verify Code
+              {t('auth.btn.verify_code')}
             </Button>
           </div>
         </form>
@@ -174,12 +176,12 @@ export const ResetKey = () => {
         <form onSubmit={handleStep3Submit} className="auth-form" noValidate>
           <AuthInput
             id="new-pass"
-            label="New Password"
+            label={t('auth.field.new_password')}
             isPassword
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder={t('auth.field.new_password_placeholder')}
             error={fieldErrors.newPassword}
             required
             disabled={isLoading}
@@ -187,12 +189,12 @@ export const ResetKey = () => {
 
           <AuthInput
             id="confirm-new-pass"
-            label="Confirm New Password"
+            label={t('auth.field.confirm_password')}
             isPassword
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your new password"
+            placeholder={t('auth.field.confirm_password_placeholder')}
             error={fieldErrors.confirmPassword}
             required
             disabled={isLoading}
@@ -203,11 +205,11 @@ export const ResetKey = () => {
             variant="primary"
             size="md"
             isLoading={isLoading}
-            loadingText="Updating Password..."
+            loadingText={t('auth.btn.saving_password')}
             rightIcon={<RefreshCw className="w-4 h-4" />}
             className="mt-2"
           >
-            Save New Password
+            {t('auth.btn.save_password')}
           </Button>
         </form>
       )}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GRAM-X Enterprise Real-Time WebSocket & Polling Fallback Client
  * Features:
  * 1. Automatic protocol resolution (ws:// vs wss://)
@@ -52,24 +52,28 @@ class RealtimeClient {
       // Determine WebSocket URL from API_BASE / current host
       const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
       const wsProtocol = isHttps ? 'wss:' : 'ws:';
-      
-      let wsHost = '127.0.0.1:8000';
-      if (typeof window !== 'undefined' && window.location.host) {
-        wsHost = window.location.hostname === 'localhost' ? '127.0.0.1:8000' : window.location.host;
-      }
-      
-      // If environment variable is configured with specific API domain
       const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+
+      // Production safety guard — do NOT fall back to localhost WebSocket in production
+      if (import.meta.env.PROD && !apiBase) {
+        console.info('[GRAM-X Realtime] Legacy WebSocket disabled in production (no VITE_API_URL set). Using Supabase Realtime.');
+        return;
+      }
+
+      let wsHost = '127.0.0.1:8000';
       if (apiBase) {
         try {
           const parsed = new URL(apiBase);
           wsHost = parsed.host;
         } catch {}
+      } else if (typeof window !== 'undefined' && window.location.host) {
+        wsHost = window.location.hostname === 'localhost' ? '127.0.0.1:8000' : window.location.host;
       }
 
       const wsUrl = `${wsProtocol}//${wsHost}/api/ws?channel=${encodeURIComponent(role)}${activeToken ? `&token=${encodeURIComponent(activeToken)}` : ''}`;
 
       this.socket = new WebSocket(wsUrl);
+
 
       this.socket.onopen = () => {
         this.reconnectAttempts = 0;

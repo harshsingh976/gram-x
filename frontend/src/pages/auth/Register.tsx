@@ -8,11 +8,13 @@ import { AuthInput } from '../../components/auth/AuthInput';
 import { AuthSelect } from '../../components/auth/AuthSelect';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../i18n';
 import '../../styles/auth.css';
 
 export const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { t } = useLanguage();
 
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -31,15 +33,15 @@ export const Register = () => {
     setErrorMessage(null);
 
     const errors: Record<string, string> = {};
-    if (!name.trim()) errors.name = 'Full name is required';
-    if (!username.trim()) errors.username = 'Username is required';
-    if (username.trim().length < 3) errors.username = 'Username must be at least 3 characters';
-    if (!password) errors.password = 'Password is required';
-    if (password.length < 6) errors.password = 'Password must be at least 6 characters';
-    if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
+    if (!name.trim()) errors.name = t('auth.error.name_required');
+    if (!username.trim()) errors.username = t('auth.error.username_required');
+    if (username.trim().length < 3) errors.username = t('auth.error.username_min');
+    if (!password) errors.password = t('auth.error.password_required');
+    if (password.length < 6) errors.password = t('auth.error.password_min');
+    if (password !== confirmPassword) errors.confirmPassword = t('auth.error.passwords_mismatch');
 
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('auth.error.email_invalid');
     }
 
     if (Object.keys(errors).length > 0) {
@@ -67,22 +69,22 @@ export const Register = () => {
   };
 
   const accountTypeOptions = [
-    { value: 'citizen', label: 'Citizen (Grievance Filing & Tracking)' },
-    { value: 'worker', label: 'Field Worker (Task Execution & SLA)' },
+    { value: 'citizen', label: t('auth.account_type.citizen') },
+    { value: 'worker',  label: t('auth.account_type.worker') },
   ];
 
   const panchayatOptions = [
-    { value: 1, label: 'Piparli (GP-01) — Main Village' },
-    { value: 2, label: 'Kalyanpura (GP-02)' },
-    { value: 3, label: 'Sundarpur (GP-03)' },
-    { value: 4, label: 'Bhimnagar (GP-04)' },
-    { value: 5, label: 'Devgarh (GP-05)' },
+    { value: 1, label: t('panchayat.gp01') },
+    { value: 2, label: t('panchayat.gp02') },
+    { value: 3, label: t('panchayat.gp03') },
+    { value: 4, label: t('panchayat.gp04') },
+    { value: 5, label: t('panchayat.gp05') },
   ];
 
   return (
     <ModalCard
-      title="Create Account"
-      subtitle="Register for National Rural Governance & Citizen Services"
+      title={t('auth.register_title')}
+      subtitle={t('auth.subtitle.register')}
       headerContent={<AuthTabs />}
     >
       {errorMessage && <AuthAlert type="error">{errorMessage}</AuthAlert>}
@@ -92,12 +94,12 @@ export const Register = () => {
         <div className="auth-col-full">
           <AuthInput
             id="reg-name"
-            label="Full Name"
+            label={t('auth.field.name')}
             name="name"
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Ramesh Kumar"
+            placeholder={t('auth.field.name_placeholder')}
             error={fieldErrors.name}
             required
             disabled={isLoading}
@@ -108,12 +110,12 @@ export const Register = () => {
         <div className="auth-grid-2col">
           <AuthInput
             id="reg-username"
-            label="Username"
+            label={t('auth.field.username')}
             name="username"
             autoComplete="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="e.g. ramesh_piparli"
+            placeholder={t('auth.field.username_placeholder')}
             error={fieldErrors.username}
             required
             disabled={isLoading}
@@ -121,7 +123,7 @@ export const Register = () => {
 
           <AuthSelect
             id="reg-role"
-            label="Account Type"
+            label={t('auth.field.account_type')}
             value={role}
             onChange={(e) => setRole(e.target.value as 'citizen' | 'worker')}
             options={accountTypeOptions}
@@ -133,20 +135,20 @@ export const Register = () => {
         <div className="auth-grid-2col">
           <AuthInput
             id="reg-email"
-            label="Email Address"
+            label={t('auth.field.email')}
             name="email"
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="e.g. ramesh@example.com"
+            placeholder={t('auth.field.email_placeholder')}
             error={fieldErrors.email}
             disabled={isLoading}
           />
 
           <AuthSelect
             id="reg-village"
-            label="Gram Panchayat"
+            label={t('auth.field.panchayat')}
             value={villageId}
             onChange={(e) => setVillageId(Number(e.target.value))}
             options={panchayatOptions}
@@ -159,13 +161,13 @@ export const Register = () => {
         <div className="auth-col-full">
           <AuthInput
             id="reg-password"
-            label="Password"
+            label={t('auth.field.password')}
             name="password"
             isPassword
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder={t('auth.field.new_password_placeholder')}
             error={fieldErrors.password}
             required
             disabled={isLoading}
@@ -175,13 +177,13 @@ export const Register = () => {
         <div className="auth-col-full">
           <AuthInput
             id="reg-confirm-password"
-            label="Confirm Password"
+            label={t('auth.field.confirm_password')}
             name="confirmPassword"
             isPassword
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your password"
+            placeholder={t('auth.field.confirm_password_placeholder')}
             error={fieldErrors.confirmPassword}
             required
             disabled={isLoading}
@@ -193,11 +195,11 @@ export const Register = () => {
           variant="primary"
           size="md"
           isLoading={isLoading}
-          loadingText="Registering Account..."
+          loadingText={t('auth.btn.registering')}
           rightIcon={<UserPlus className="w-4 h-4" />}
           className="mt-2"
         >
-          Create GRAM-X Account
+          {t('auth.btn.register')}
         </Button>
       </form>
     </ModalCard>

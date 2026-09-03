@@ -9,6 +9,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   fullWidth?: boolean;
+  noScale?: boolean; // opt-out of scale animation for small/icon buttons
 }
 
 export const Button = ({
@@ -23,26 +24,32 @@ export const Button = ({
   className = '',
   disabled,
   type = 'button',
+  noScale = false,
   ...props
 }: ButtonProps) => {
+  // Base classes — light-theme-compatible focus ring
   const baseClasses =
-    'inline-flex items-center justify-center font-bold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed select-none';
+    'inline-flex items-center justify-center font-bold rounded-xl transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none select-none will-change-transform';
+
+  const scaleClasses = noScale
+    ? ''
+    : 'hover:scale-[1.02] active:scale-[0.98]';
 
   const variantClasses = {
     primary:
-      'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:from-blue-700 active:to-indigo-700 text-white shadow-lg hover:shadow-blue-900/30 focus:ring-blue-500',
+      'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 active:from-blue-700 active:to-blue-800 text-white shadow-md hover:shadow-lg hover:shadow-blue-500/25 focus:ring-blue-500 focus:ring-offset-white',
     secondary:
-      'bg-slate-800 hover:bg-slate-700 active:bg-slate-850 text-slate-200 focus:ring-slate-400',
+      'bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 shadow-sm focus:ring-slate-400 focus:ring-offset-white',
     outline:
-      'bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white focus:ring-slate-500',
+      'bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-500 focus:ring-offset-white',
     danger:
-      'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-md focus:ring-red-500',
+      'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-md hover:shadow-red-500/25 focus:ring-red-500 focus:ring-offset-white',
     ghost:
-      'bg-transparent hover:bg-slate-800/80 text-slate-300 hover:text-white focus:ring-slate-500',
+      'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 focus:ring-slate-400 focus:ring-offset-white',
   };
 
   const sizeClasses = {
-    sm: 'py-2 px-3 text-xs min-h-[36px] gap-1.5',
+    sm: 'py-1.5 px-3 text-xs min-h-[36px] gap-1.5',
     md: 'py-3 px-4 text-sm min-h-[48px] gap-2',
     lg: 'py-3.5 px-6 text-base min-h-[52px] gap-2.5',
   };
@@ -53,7 +60,7 @@ export const Button = ({
     <button
       type={type}
       disabled={disabled || isLoading}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
+      className={`${baseClasses} ${scaleClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
       {...props}
     >
       {isLoading ? (

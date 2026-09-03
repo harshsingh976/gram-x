@@ -41,7 +41,7 @@ export const AuthSelect = ({
         {...props}
       >
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value} className="bg-slate-900 text-slate-100">
+          <option key={opt.value} value={opt.value} className="bg-white text-slate-900">
             {opt.label}
           </option>
         ))}

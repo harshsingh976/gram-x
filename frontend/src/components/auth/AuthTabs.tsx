@@ -1,27 +1,29 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../i18n';
 import '../../styles/auth.css';
 
 export interface TabItem {
   id: string;
-  label: string;
+  labelKey: string;
   path: string;
 }
 
 export const AuthTabs = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const tabs: TabItem[] = [
-    { id: 'login', label: 'Sign In', path: '/login' },
-    { id: 'register', label: 'Register', path: '/register' },
-    { id: 'reset-key', label: 'Reset Key', path: '/reset-key' },
+    { id: 'login',     labelKey: 'auth.tab.sign_in', path: '/login' },
+    { id: 'register',  labelKey: 'auth.tab.register', path: '/register' },
+    { id: 'reset-key', labelKey: 'auth.tab.reset',    path: '/reset-key' },
   ];
 
   const currentPath = location.pathname;
 
   return (
-    <div
+    <nav
       role="tablist"
       aria-label="Authentication Navigation"
       className="auth-tabs-container"
@@ -42,10 +44,10 @@ export const AuthTabs = () => {
             className={`auth-tab-btn ${isActive ? 'active' : ''}`}
             onClick={() => navigate(tab.path)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 };

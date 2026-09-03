@@ -27,8 +27,14 @@ export const getApiBaseUrl = (): string => {
     return '/api';
   }
   
+  // Production safety guard: never point to localhost in production.
+  if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
+    console.warn('[GRAM-X] VITE_API_URL is not set. Legacy API calls disabled in production.');
+    return '';
+  }
   return 'http://127.0.0.1:8000/api';
 };
+
 
 export interface ApiRequestOptions extends RequestInit {
   requiresAuth?: boolean;
