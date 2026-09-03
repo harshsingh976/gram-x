@@ -2,7 +2,7 @@ import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Spinner } from './Spinner';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   loadingText?: string;
@@ -37,6 +37,8 @@ export const Button = ({
       'bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white focus:ring-slate-500',
     danger:
       'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-md focus:ring-red-500',
+    ghost:
+      'bg-transparent hover:bg-slate-800/80 text-slate-300 hover:text-white focus:ring-slate-500',
   };
 
   const sizeClasses = {
