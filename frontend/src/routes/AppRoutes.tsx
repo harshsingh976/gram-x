@@ -13,8 +13,10 @@ import { Register } from '../pages/auth/Register';
 import { ResetKey } from '../pages/auth/ResetKey';
 import { TransparencyPortal } from '../pages/TransparencyPortal';
 import { ServiceDirectory } from '../pages/ServiceDirectory';
+import { CommandCenter } from '../pages/CommandCenter';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import App from '../App';
+
 
 // Detect reduced motion preference
 const useReducedMotion = () => {
@@ -107,6 +109,16 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* Protected Governance Command Center Route */}
+        <Route
+          path="/command-center"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'district', 'super_admin']}>
+              <PageWrapper><CommandCenter /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Protected Dashboard Route */}
         <Route
           path="/"
@@ -116,6 +128,7 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           }
         />
+
 
         {/* Catch-all fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

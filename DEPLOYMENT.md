@@ -32,6 +32,8 @@ AI_API_KEY=...
    - `04_phase4_notifications_sla_security.sql`
    - `05_phase5_ecosystem_scale_governance.sql`
    - `06_phase7_scale_performance_indexes.sql`
+   - `07_phase9_operational_intelligence.sql`
+
 
 ## 4. Operational Runbooks
 - [Production Deployment Checklist](./PRODUCTION_CHECKLIST.md)

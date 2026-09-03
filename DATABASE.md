@@ -9,6 +9,8 @@ All migrations reside in `supabase/migrations/`:
 - `04_phase4_notifications_sla_security.sql`: Notifications, preferences, SLA tracking, SLA triggers.
 - `05_phase5_ecosystem_scale_governance.sql`: Hierarchy (`states`, `districts`, `blocks`, `panchayats`, `villages`, `user_scopes`), citizen feedback, appeals, directory, public notices, audit logs, feature flags.
 - `06_phase7_scale_performance_indexes.sql`: Composite indexes, Full-Text GIN index, `idempotency_keys`, `rate_limit_buckets`, and paginated RPC functions (`get_paginated_grievances`, `get_governance_kpi_summary`) for 100K-scale execution.
+- `07_phase9_operational_intelligence.sql`: Governance command center operational KPI aggregations and SLA risk prediction feed RPCs (`get_command_center_operational_kpis`, `get_sla_risk_prediction_feed`).
+
 
 ---
 
