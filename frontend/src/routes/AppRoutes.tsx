@@ -9,6 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import { SignIn } from '../pages/auth/SignIn';
 import { Register } from '../pages/auth/Register';
 import { ResetKey } from '../pages/auth/ResetKey';
+import { TransparencyPortal } from '../pages/TransparencyPortal';
+import { ServiceDirectory } from '../pages/ServiceDirectory';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import App from '../App';
 
@@ -18,6 +20,10 @@ export const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Informational Routes */}
+        <Route path="/transparency" element={<TransparencyPortal />} />
+        <Route path="/services" element={<ServiceDirectory />} />
+
         {/* Public Authentication Routes (redirect to / if already authenticated) */}
         <Route
           path="/login"

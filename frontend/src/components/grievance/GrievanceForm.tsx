@@ -37,6 +37,7 @@ import type { AIAnalysisResult, SimilarityMatch } from '../../services/ai/types'
 import { AIRecommendationCard } from '../ai/AIRecommendationCard';
 import { SimilarGrievancesWarning } from '../ai/SimilarGrievancesWarning';
 import { LocationPicker } from '../maps/LocationPicker';
+import { VoiceInputButton } from '../voice/VoiceInputButton';
 import { saveDraft, getDraft, clearDraft, hasDraft } from '../../services/draftService';
 import { checkRateLimit } from '../../services/rateLimiter';
 import { Button } from '../ui/Button';
@@ -342,17 +343,24 @@ export const GrievanceForm = ({
 
       {/* 3. Description */}
       <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-300 flex justify-between">
-          <span>Detailed Description *</span>
-          <span className="text-[10px] text-slate-500">{description.length}/500</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-slate-300">
+            Detailed Description *
+          </label>
+          <div className="flex items-center gap-2">
+            <VoiceInputButton
+              onTranscript={(txt) => setDescription((prev) => (prev ? `${prev} ${txt}` : txt))}
+            />
+            <span className="text-[10px] text-slate-500">{description.length}/500</span>
+          </div>
+        </div>
         <textarea
           rows={3}
           maxLength={500}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe what is broken, how long the issue has persisted, and affected households..."
-          className={`w-full bg-slate-900 border rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 resize-none ${
+          placeholder="Describe what is broken, how long the issue has persisted, and affected households (or click mic to speak)..."
+          className={`w-full bg-slate-900 border rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-sky-500 resize-none ${
             fieldErrors.description ? 'border-rose-500' : 'border-slate-800'
           }`}
         />

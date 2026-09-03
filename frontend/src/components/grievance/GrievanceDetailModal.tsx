@@ -47,6 +47,8 @@ import { GrievanceTimeline } from './GrievanceTimeline';
 import { AssignWorkerModal } from './AssignWorkerModal';
 import { EscalateGrievanceModal } from './EscalateGrievanceModal';
 import { AIRecommendationCard } from '../ai/AIRecommendationCard';
+import { CitizenFeedbackModal } from '../governance/CitizenFeedbackModal';
+import { ReopenGrievanceModal } from '../governance/ReopenGrievanceModal';
 import { Button } from '../ui/Button';
 import type { UserRole } from '../../types';
 
@@ -77,6 +79,8 @@ export const GrievanceDetailModal = ({
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isReopenModalOpen, setIsReopenModalOpen] = useState(false);
   const [resolutionNoteInput, setResolutionNoteInput] = useState('');
   const [showResolutionBox, setShowResolutionBox] = useState(false);
 
@@ -397,14 +401,32 @@ export const GrievanceDetailModal = ({
                   </Button>
                 </>
               )}
+              {(currentGrievance.status === 'RESOLVED' || currentGrievance.status === 'CLOSED') && (
+                <button
+                  type="button"
+                  onClick={() => setIsFeedbackModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-500/40 hover:bg-amber-900 transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  Rate Resolution Quality
+                </button>
+              )}
+              {currentGrievance.status === 'CLOSED' && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                  <p className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" /> This grievance is closed in the Panchayat record.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsReopenModalOpen(true)}
+                    className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 hover:underline cursor-pointer"
+                  >
+                    Appeal / Request Reopening
+                  </button>
+                </div>
+              )}
               {currentGrievance.status !== 'RESOLVED' && currentGrievance.status !== 'CLOSED' && (
                 <p className="text-xs text-slate-400">
                   Your grievance is actively being processed by the Gram Panchayat team. You will be notified when the worker submits resolution proof.
-                </p>
-              )}
-              {currentGrievance.status === 'CLOSED' && (
-                <p className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" /> This grievance is closed and archived in the Panchayat record.
                 </p>
               )}
             </div>
@@ -554,7 +576,7 @@ export const GrievanceDetailModal = ({
         </form>
       </div>
 
-      {/* Sub-modals for assignment & escalation */}
+      {/* Sub-modals for assignment, escalation, feedback & reopen */}
       <AssignWorkerModal
         grievance={currentGrievance}
         isOpen={isAssignModalOpen}
@@ -567,6 +589,26 @@ export const GrievanceDetailModal = ({
         isOpen={isEscalateModalOpen}
         onClose={() => setIsEscalateModalOpen(false)}
         onEscalated={handleUpdateGrievance}
+      />
+
+      <CitizenFeedbackModal
+        isOpen={isFeedbackModalOpen}
+        grievanceId={currentGrievance.id}
+        referenceNo={currentGrievance.reference_no}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
+
+      <ReopenGrievanceModal
+        isOpen={isReopenModalOpen}
+        grievanceId={currentGrievance.id}
+        referenceNo={currentGrievance.reference_no}
+        onClose={() => setIsReopenModalOpen(false)}
+        onReopenRequested={() => {
+          handleUpdateGrievance({
+            ...currentGrievance,
+            status: 'IN_PROGRESS',
+          });
+        }}
       />
     </div>
   );
