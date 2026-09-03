@@ -23,9 +23,9 @@ export const ModalCard = ({
 }: ModalCardProps) => {
   return (
     <div className="auth-page">
-      <div className={`auth-card ${className}`} role="region" aria-label={title}>
+      <section className={`auth-shell ${className}`} aria-label={title}>
         {/* Header Section */}
-        <div className="auth-card-header">
+        <header className="auth-card-header">
           {showEmblem && (
             <div className="auth-emblem-badge" aria-hidden="true">
               <Landmark className="w-6 h-6" />
@@ -34,16 +34,16 @@ export const ModalCard = ({
           <h1 className="auth-title">{title}</h1>
           {subtitle && <p className="auth-subtitle">{subtitle}</p>}
           {headerContent}
-        </div>
+        </header>
 
-        {/* Card Body */}
-        <div className="auth-card-body">{children}</div>
+        {/* Form & Main Content Body */}
+        <main className="auth-card-body">{children}</main>
 
-        {/* Optional Footer */}
+        {/* Footer Section */}
         {footerContent !== undefined ? (
           footerContent
         ) : (
-          <div className="auth-card-footer">
+          <footer className="auth-card-footer">
             <p>
               National Panchayat Citizen Helpline:{' '}
               <strong className="text-slate-300">1800-180-1555</strong> (Toll-Free)
@@ -51,9 +51,11 @@ export const ModalCard = ({
             <p className="mt-1 text-[11px] text-slate-500">
               Protected by 256-bit cryptographic signatures &amp; role-based access control.
             </p>
-          </div>
+          </footer>
         )}
-      </div>
+      </section>
     </div>
   );
 };
+
+export default ModalCard;

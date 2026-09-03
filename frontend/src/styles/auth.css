@@ -1,6 +1,7 @@
 /* ============================================================
-   GRAM-X AUTHENTICATION SYSTEM — RESPONSIVE DESIGN
-   Mobile-first, collision-free, dark government-tech styling
+   GRAM-X AUTHENTICATION SYSTEM — RESPONSIVE ARCHITECTURE (PASS 2)
+   Single primary page scroll context, zero nested scrollbars,
+   zero clipped content, 100% responsive from 320px to 1440px.
    ============================================================ */
 
 /* ─── AUTH PAGE WRAPPER ──────────────────────────────────── */
@@ -10,9 +11,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 24px 16px;
+  padding: 32px 16px;
   box-sizing: border-box;
-  overflow-x: hidden;
   background: radial-gradient(ellipse at 50% 20%, #0f172a 0%, #020617 100%);
   color: #f8fafc;
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
@@ -21,17 +21,15 @@
 @media (max-width: 640px) {
   .auth-page {
     align-items: flex-start;
-    padding: 12px 10px;
+    padding: 16px 12px;
   }
 }
 
-/* ─── AUTH CARD / MODAL CARD ─────────────────────────────── */
-.auth-card {
+/* ─── AUTH SHELL / CARD (ONE CONTINUOUS CONTAINER) ───────── */
+.auth-card,
+.auth-shell {
   width: min(100%, 560px);
-  max-width: 560px;
-  max-height: calc(100dvh - 24px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  margin: 0 auto;
   box-sizing: border-box;
   background: rgba(15, 23, 42, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -44,26 +42,27 @@
 }
 
 @media (max-width: 640px) {
-  .auth-card {
+  .auth-card,
+  .auth-shell {
     width: 100%;
-    max-width: 100%;
     border-radius: 16px;
-    max-height: calc(100dvh - 16px);
   }
 }
 
-/* ─── AUTH CARD HEADER ───────────────────────────────────── */
+/* ─── AUTH HEADER ────────────────────────────────────────── */
 .auth-card-header {
   padding: 24px 24px 16px;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%);
-  flex-shrink: 0;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  box-sizing: border-box;
 }
 
 @media (max-width: 480px) {
   .auth-card-header {
-    padding: 16px 14px 12px;
+    padding: 18px 14px 12px;
   }
 }
 
@@ -71,18 +70,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
   border: 1px solid rgba(56, 189, 248, 0.4);
   color: #38bdf8;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   box-shadow: 0 4px 12px rgba(3, 105, 161, 0.3);
 }
 
 .auth-title {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3.5vw, 1.6rem);
   font-weight: 800;
   color: #ffffff;
   margin: 0;
@@ -90,22 +89,15 @@
 }
 
 .auth-subtitle {
-  font-size: 0.825rem;
+  font-size: clamp(0.75rem, 2.2vw, 0.85rem);
   color: #94a3b8;
   margin: 4px 0 0;
-  line-height: 1.35;
+  line-height: 1.4;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
-@media (max-width: 480px) {
-  .auth-title {
-    font-size: 1.25rem;
-  }
-  .auth-subtitle {
-    font-size: 0.75rem;
-  }
-}
-
-/* ─── AUTH TABS ──────────────────────────────────────────── */
+/* ─── AUTH TABS (3 EQUAL COLUMNS) ────────────────────────── */
 .auth-tabs-container {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -114,7 +106,9 @@
   padding: 4px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 16px;
+  margin-top: 14px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .auth-tab-btn {
@@ -137,6 +131,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 .auth-tab-btn:hover:not(.active) {
@@ -164,17 +159,16 @@
   }
 }
 
-/* ─── AUTH CARD BODY ─────────────────────────────────────── */
+/* ─── AUTH CARD BODY (NATURAL FLOW, ZERO OVERFLOW SCROLL) ─── */
 .auth-card-body {
   padding: 24px;
-  flex: 1;
-  overflow-y: auto;
   box-sizing: border-box;
+  width: 100%;
 }
 
 @media (max-width: 480px) {
   .auth-card-body {
-    padding: 16px 14px;
+    padding: 18px 14px;
   }
 }
 
@@ -189,7 +183,7 @@
   align-items: flex-start;
   gap: 10px;
   box-sizing: border-box;
-  animation: authFadeIn 0.25s ease-out;
+  animation: authFadeIn 0.2s ease-out;
 }
 
 .auth-alert-error {
@@ -235,6 +229,8 @@
 
 .auth-col-full {
   grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
@@ -338,6 +334,8 @@
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-quick-title {
@@ -356,6 +354,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 360px) {
@@ -373,6 +373,9 @@
   cursor: pointer;
   transition: all 0.2s;
   min-height: 44px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .auth-quick-btn:hover {
@@ -384,29 +387,39 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .auth-quick-creds {
   font-size: 0.68rem;
   color: #64748b;
   font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ─── CARD FOOTER ────────────────────────────────────────── */
+/* ─── CARD FOOTER (INTEGRATED CONTINUOUS REGION) ─────────── */
 .auth-card-footer {
   padding: 14px 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
   font-size: 0.75rem;
   color: #64748b;
-  flex-shrink: 0;
   background: rgba(2, 6, 23, 0.4);
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 @media (max-width: 480px) {
   .auth-card-footer {
-    padding: 10px 14px;
+    padding: 12px 14px;
     font-size: 0.7rem;
+    line-height: 1.4;
   }
 }
 

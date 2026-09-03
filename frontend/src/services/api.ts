@@ -10,15 +10,21 @@ export const getApiBaseUrl = (): string => {
   }
   
   if (typeof window !== 'undefined') {
-    // In browser with Vite dev proxy active, use relative /api
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const host = window.location.hostname;
+    // 1. Local development: use relative /api (proxied by Vite to http://127.0.0.1:8000)
+    if (host === 'localhost' || host === '127.0.0.1') {
       return '/api';
     }
-    // Remote cloud production deployment
-    if (window.location.hostname.includes('onrender.com')) {
+    // 2. Cloud production backend on Render
+    if (host.includes('onrender.com') || host.includes('vercel.app')) {
       return 'https://gramx-backend.onrender.com/api';
     }
-    return `${window.location.protocol}//api.${window.location.host.replace(/^(citizen|worker|admin|collector)\./, '')}/api`;
+    // 3. Official Government Domain
+    if (host.endsWith('gramx.gov.in')) {
+      return 'https://api.gramx.gov.in/api';
+    }
+    // 4. Same-origin fallback
+    return '/api';
   }
   
   return 'http://127.0.0.1:8000/api';
@@ -53,10 +59,9 @@ export const apiRequest = async <T = any>(
       headers,
     });
   } catch (networkError: any) {
-    // Distinguish genuine backend unreachable / CORS errors from ordinary app issues
     console.error(`[GRAM-X API] Network connection failed for ${url}:`, networkError);
     throw new Error(
-      `Authentication backend is currently unreachable at ${baseUrl}. Please ensure the backend server is running.`
+      `Authentication service is temporarily unavailable at ${baseUrl}. Please ensure the backend server is running.`
     );
   }
 
@@ -68,7 +73,6 @@ export const apiRequest = async <T = any>(
   }
 
   if (!response.ok) {
-    // Extract structured error details
     let errorMessage = `Request failed (${response.status})`;
     
     if (data && typeof data === 'object') {
@@ -83,8 +87,10 @@ export const apiRequest = async <T = any>(
 
     if (response.status === 401) {
       if (cleanEndpoint.includes('/auth/login')) {
-        errorMessage = 'Incorrect User ID or password. Please verify your credentials.';
+        errorMessage = 'Invalid username or password.';
       }
+    } else if (response.status === 500) {
+      errorMessage = 'Something went wrong on the server. Please try again later.';
     }
 
     throw new Error(errorMessage);
@@ -92,3 +98,5 @@ export const apiRequest = async <T = any>(
 
   return data as T;
 };
+
+export default apiRequest;
