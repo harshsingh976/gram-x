@@ -31,3 +31,11 @@ AI_API_KEY=...
    - `03_phase3_ai_ocr_maps_rls.sql`
    - `04_phase4_notifications_sla_security.sql`
    - `05_phase5_ecosystem_scale_governance.sql`
+   - `06_phase7_scale_performance_indexes.sql`
+
+## 4. Operational Runbooks
+- [Production Deployment Checklist](./PRODUCTION_CHECKLIST.md)
+- [100K-User Load Testing Report](./LOAD_TESTING.md)
+- [Disaster Recovery & Business Continuity Plan](./DISASTER_RECOVERY.md)
+- [Production Rollback Strategy](./ROLLBACK.md)
+

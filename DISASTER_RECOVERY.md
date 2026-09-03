@@ -1,92 +1,45 @@
-﻿# GRAM-X DISASTER RECOVERY & BUSINESS CONTINUITY PLAN (DRP)
-**Document Version:** 2.0 (Enterprise Production Cloud Edition)  
-**System Classification:** Tier-1 Critical Public Infrastructure Governance Network  
-**Authority:** Gram Panchayat Digital Governance Directorate • Government of Madhya Pradesh  
+# GRAM-X — Disaster Recovery & Business Continuity Plan (Phase 7)
+
+## 1. Recovery Objectives (RPO & RTO)
+
+| Service Layer | Recovery Point Objective (RPO) | Recovery Time Objective (RTO) | Strategy |
+|---------------|--------------------------------|-------------------------------|----------|
+| **Supabase Database** | < 1 minute (WAL Stream) | < 15 minutes | Automated Multi-AZ Point-in-Time Recovery |
+| **Object Storage (R2)** | 0 seconds (Immediate) | < 5 minutes | Multi-Region Bucket Replication & Versioning |
+| **Frontend UI (Vercel)**| 0 seconds | < 2 minutes | Instant Deployment Rollback to prior immutable hash |
+| **Edge Functions / Auth**| 0 seconds | < 5 minutes | Infrastructure-as-Code redeployment |
 
 ---
 
-## 1. Executive Summary & Recovery Objectives
-The GRAM-X platform manages grassroots citizen grievances, public infrastructure assets, field technician deployments, and cryptographic audit records across gram panchayats and district administrations. 
+## 2. Backup Schedules & Architectures
 
-- **Recovery Point Objective (RPO):** $\le$ 5 minutes (via Transactional Outbox + Render Managed PostgreSQL continuous WAL archiving).
-- **Recovery Time Objective (RTO):** $\le$ 15 minutes for primary web API and $\le$ 30 minutes for multi-region failover.
-
----
-
-## 2. Infrastructure Architecture & Failure Boundaries
-
-```
-                 ┌──────────────────────────────────────────────┐
-                 │       CLOUDFLARE EDGE / HTTPS WSS ROUTER     │
-                 └──────────────────────┬───────────────────────┘
-                                        │
-                    ┌───────────────────┴───────────────────┐
-                    ▼                                       ▼
-       [GRAM-X FRONTEND SPA]                     [GRAM-X FASTAPI SERVICE]
-       Vite React Static Site                    Python 3.11 Web Service
-                    │                                       │
-                    │               ┌───────────────────────┼───────────────────────┐
-                    │               ▼                       ▼                       ▼
-                    │       [MANAGED POSTGRESQL]    [CLOUD OBJECT STORAGE]   [AI / STT ENGINES]
-                    │       Automated Daily Backup  S3 / Cloudflare R2       Whisper / Llama 3.3
-                    │       + Continuous WAL        Multi-AZ Replication     Graceful Fallback
-                    │               │
-                    └───────────────┴───────────────────────┐
-                                                            ▼
-                                                [OFFLINE INDEXEDDB QUEUE]
-                                                Local Store-and-Forward on Mobile
-```
+1. **Continuous WAL Archiving**: PostgreSQL Write-Ahead Logs are replicated continuously to secure secondary storage.
+2. **Daily Logical Snapshots**: Daily automated schema + data dumps stored in an isolated, immutable storage bucket with 30-day retention.
+3. **Evidence Media Versioning**: Cloudflare R2 object versioning protects evidence images from accidental deletion or malicious modification.
+4. **Configuration Version Control**: All database migrations, edge functions, and deployment configurations are versioned in Git (`supabase/migrations/`).
 
 ---
 
-## 3. Disaster Scenarios & Recovery Procedures
+## 3. Disaster Scenarios & Playbooks
 
-### Scenario A: Database Outage or Data Corruption
-1. **Detection:** `/readiness` probe returns `503 Service Unavailable` with `database: UNHEALTHY`.
-2. **Immediate Action:**
-   - Put web service into read-only degraded mode via `APP_ENV_DEGRADED=true`.
-   - Field workers automatically switch to IndexedDB store-and-forward mode.
-3. **Restoration:**
-   - Execute point-in-time recovery (PITR) in Render Dashboard or restore latest automated daily snapshot.
-   - Run database schema migration: `alembic upgrade head` or `apply_schema_migrations()`.
-   - Re-verify SHA-256 cryptographic audit chain continuity via `verify_audit_chain()`.
-   - Trigger Transactional Outbox reconciler to resume event dispatching.
+### Scenario A: Supabase Primary Region Outage
+1. **Detection**: UptimeRobot alerts health check failure on `/api/health`.
+2. **Action**:
+   - Access Supabase Dashboard or CLI.
+   - Initiate Failover to Secondary AZ / Region from latest PITR point.
+   - Update `VITE_SUPABASE_URL` in Vercel environment variables.
+   - Trigger instant zero-downtime redeploy of Vercel production.
+3. **Validation**: Run smoke test script to verify login, grievance creation, and data isolation.
 
-### Scenario B: Cloud Object Storage Failure (S3 / R2 / MinIO)
-1. **Detection:** Storage probe fails; file upload returns `502 Bad Gateway`.
-2. **Procedure:**
-   - Fast-fail to secondary bucket or local disk fallback buffer (`/var/data/gramx_media_buffer`).
-   - Client stores captured images/voice notes locally in IndexedDB.
-   - Once cloud storage resumes, background worker streams buffered media and validates SHA-256 byte parity.
+### Scenario B: Accidental Data Corruption or Malicious Deletion
+1. **Action**:
+   - Isolate affected tables using feature flag / maintenance mode.
+   - Restore database to timestamp `T - 5 minutes` before corruption event via Supabase PITR.
+   - Replay unprocessed events from offline sync queue and `audit_logs`.
+2. **Validation**: Verify record count, checksum hashes, and RLS consistency.
 
-### Scenario C: External AI / STT Provider Outage (Whisper / Llama)
-1. **Detection:** Speech-to-text or classification API call times out (>10s).
-2. **Procedure:**
-   - System automatically degrades gracefully to regional Indic rule-based classification.
-   - Voice audio recording is preserved intact in cloud storage.
-   - Original audio remains authoritative for audit and manual administrative review.
-
-### Scenario D: Network Disconnection / Field Worker Inaccessibility
-1. **Detection:** Device drops connection to 0 bars / airplane mode.
-2. **Procedure:**
-   - IndexedDB store-and-forward queue intercepts all task starts, photo captures, and completion debriefs.
-   - Upon network restoration, client transmits batch payload to `POST /api/offline/sync-batch`.
-   - Server returns reconciliation timestamp and logs SHA-256 audit events.
-
----
-
-## 4. Cryptographic Verification Post-Recovery
-Every recovery procedure MUST conclude with an automated audit chain integrity check:
-```python
-from app.database import SessionLocal
-from app.services.audit_chain import verify_audit_chain
-
-db = SessionLocal()
-result = verify_audit_chain(db)
-if not result["is_valid"]:
-    raise SystemError(f"Audit chain compromised at block {result.get('broken_at')}")
-print("100% SHA-256 Audit Integrity Verified.")
-```
-
----
-*Maintained by the GRAM-X Operations & Platform Security Team.*
+### Scenario C: Cloudflare R2 Storage Outage
+1. **Action**:
+   - Switch asset delivery endpoint to secondary backup storage.
+   - Fall back to inline thumbnail preview data URLs for pending submissions.
+   - Queue binary photo uploads in browser IndexedDB cache until storage connectivity restores.
